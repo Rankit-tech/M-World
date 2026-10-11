@@ -53,3 +53,6 @@ GitHub Pages on karo: Settings > Pages > Deploy from a branch > `main` / root.
 - **Ranking:** jo gaana log 20 second tak sunte hain wo "listen" gina jata hai, poora sun lein to double. Sabse zyada score wala gaana har theme mein #1 par aur sabse pehle bajta hai. Naye gaane neeche se shuru hote hain.
 - **Chat ID:** har visitor ko fixed ID milti hai (jaise `MW-4F2A91`). Naam badal nahi sakte. Admin ke message par `Admin ✓` dikhta hai.
 - **Admin page:** Dashboard, Upload, Songs, Chat alag tabs mein. Gaane ke saath teen dot (⋮) se edit (title, artist, theme) ya delete. Chat mein ID ke hisaab se message ya us ID ke saare message delete kar sakte ho.
+
+## Update v3: song ko #1 / #2 par pin karna
+`supabase/update-v3.sql` ko SQL Editor mein ek baar run karo (update-v2.sql ke baad). Phir admin ke Songs tab mein song ke ⋮ menu se "Move up", "Move down", "Make #1" ya "Move to position..." karo. Pin kiya hua song wahin rehta hai jab tak "Unpin" na karo. Baaki songs listens ke hisaab se uske neeche aate hain.

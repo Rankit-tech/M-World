@@ -149,7 +149,7 @@ dialog h2{margin-top:0}
     <!-- Songs -->
     <section class="card" data-pane="songs" role="tabpanel" hidden>
       <h2>Songs</h2>
-      <p class="hint">Songs are ranked by listeners: the most listened song is #1 and plays first on the site. A listen counts when someone stays for 20 seconds, and a full play counts double. New songs start at the bottom and move up as people listen. Use the three dots on a song to edit or delete it.</p>
+      <p class="hint">Songs are ranked by listeners: the most listened song is #1 and plays first on the site. A listen counts when someone stays for 20 seconds, and a full play counts double. New songs start at the bottom and move up as people listen. Use the three dots on a song to move it to any position (#1, #2...), edit or delete it. A moved song stays pinned there until you unpin it.</p>
       <div class="msg err" id="rankwarn" hidden>Ranking is not set up yet. Run supabase/update-v2.sql in the Supabase SQL Editor.</div>
       <div class="chips" id="chips" role="group" aria-label="Filter by theme"></div>
       <div id="songs"></div>
@@ -334,15 +334,20 @@ dialog h2{margin-top:0}
   }
   function songRow(s){
     const d=document.createElement('div');d.className='song';
-    const rk=document.createElement('span');rk.className='rk'+(s.rank<=3?' r'+s.rank:'');rk.textContent='#'+s.rank;rk.title='Rank in '+(THEMES[s.theme]||s.theme);
+    const rk=document.createElement('span');rk.className='rk'+(s.rank<=3?' r'+s.rank:'');rk.textContent='#'+s.rank;rk.title='Rank in '+(THEMES[s.theme]||s.theme)+(s.pin_rank!=null?' (pinned by you)':'');if(s.pin_rank!=null)rk.textContent+=' \ud83d\udccc';
     const sm=document.createElement('div');sm.className='sm';
     const b=document.createElement('b');b.textContent=s.title;
     const sub=document.createElement('small');
-    sub.textContent=[s.artist,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
+    sub.textContent=[s.artist,s.pin_rank!=null?'pinned':null,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
     sm.append(b,sub);
     const pb=iconBtn('play','Preview');pb.onclick=()=>preview(s,pb);
     const db=iconBtn('dots','More options for '+s.title);
     db.onclick=()=>openMenu(db,[
+      {label:'Move up',fn:()=>moveSong(s,s.rank-1)},
+      {label:'Move down',fn:()=>moveSong(s,s.rank+1)},
+      {label:'Make #1',fn:()=>moveSong(s,1)},
+      {label:'Move to position\u2026',fn:()=>{const v=prompt('New position in '+(THEMES[s.theme]||s.theme)+' (1 = top):',s.rank);if(v!==null)moveSong(s,parseInt(v,10))}},
+      ...(s.pin_rank!=null?[{label:'Unpin (back to automatic rank)',fn:()=>unpinSong(s)}]:[]),
       {label:'Edit title, artist, theme',fn:()=>openEdit(s)},
       {label:'Delete song',danger:true,fn:()=>deleteSong(s)}
     ]);
@@ -358,6 +363,27 @@ dialog h2{margin-top:0}
       if(!list.length){const e=document.createElement('div');e.className='hint';e.textContent='No songs. This theme shows "No songs yet".';box.append(e)}
       list.forEach(s=>box.append(songRow(s)));
     });
+  }
+  async function moveSong(s,pos){
+    const list=allSongs.filter(x=>x.theme===s.theme).sort((a,b)=>a.rank-b.rank);
+    if(!Number.isFinite(pos))return;
+    pos=Math.max(1,Math.min(list.length,pos));
+    const from=list.findIndex(x=>x.id===s.id);
+    if(pos-1===from)return;
+    list.splice(from,1);list.splice(pos-1,0,s);
+    let last=Math.max(pos-1,from);
+    list.forEach((x,i)=>{if(x.pin_rank!=null&&i>last)last=i});
+    const ups=[];
+    for(let i=0;i<=last;i++){if(list[i].pin_rank!==i+1)ups.push(sb.from('songs').update({pin_rank:i+1}).eq('id',list[i].id))}
+    const res=await Promise.all(ups);
+    const bad=res.find(x=>x.error);
+    if(bad){alert(/pin_rank/.test(bad.error.message)?'Run supabase/update-v3.sql in the Supabase SQL Editor first.':'Could not move: '+bad.error.message)}
+    refreshSongs();
+  }
+  async function unpinSong(s){
+    const {error}=await sb.from('songs').update({pin_rank:null}).eq('id',s.id);
+    if(error)alert('Could not unpin: '+error.message);
+    refreshSongs();
   }
   async function deleteSong(s){
     if(!confirm('Delete "'+s.title+'"? This cannot be undone.'))return;
