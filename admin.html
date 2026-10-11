@@ -36,6 +36,17 @@ button:disabled{opacity:.5;cursor:default}
 .song .acts{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
 .song audio{height:34px;max-width:100%}
 @media(max-width:560px){.song .r{grid-template-columns:1fr}}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin-bottom:1rem}
+.stat{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:.9rem;padding:.7rem .9rem}
+.stat b{display:block;font-size:1.6rem;line-height:1.2}
+.stat span{color:var(--mute);font-size:.8rem}
+.live b{color:#7be0a0}
+.chart{display:flex;align-items:flex-end;gap:4px;height:120px;margin:.4rem 0 .2rem}
+.chart div{flex:1;background:var(--accent);border-radius:4px 4px 0 0;min-height:2px;position:relative}
+.chart div i{position:absolute;left:0;right:0;bottom:100%;font-size:.65rem;text-align:center;font-style:normal;color:var(--mute)}
+.axis{display:flex;gap:4px;font-size:.62rem;color:var(--mute)}.axis span{flex:1;text-align:center;overflow:hidden}
+.top{margin:.5rem 0 0;padding-left:1.1rem;color:var(--mute)}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -57,6 +68,25 @@ button:disabled{opacity:.5;cursor:default}
   </section>
 
   <div id="panel" hidden>
+    <section class="card">
+      <h2>Dashboard</h2>
+      <div class="stats">
+        <div class="stat live"><b id="s_live">-</b><span>Live now</span></div>
+        <div class="stat"><b id="s_tv">-</b><span>Visitors today</span></div>
+        <div class="stat"><b id="s_tvis">-</b><span>Visits today</span></div>
+        <div class="stat"><b id="s_total">-</b><span>Total visitors</span></div>
+        <div class="stat"><b id="s_songs">-</b><span>Songs uploaded</span></div>
+        <div class="stat"><b id="s_plays">-</b><span>Plays today</span></div>
+        <div class="stat"><b id="s_msgs">-</b><span>Chat messages today</span></div>
+      </div>
+      <div class="hint">Visitors per day (last 14 days, India time)</div>
+      <div class="chart" id="chart"></div><div class="axis" id="axis"></div>
+      <div class="hint" style="margin-top:.8rem">Songs per theme: <span id="s_theme">-</span></div>
+      <div class="hint">Most played songs</div>
+      <ol class="top" id="s_top"></ol>
+      <div class="msg" id="smsg"></div>
+      <p><button class="ghost" id="srefresh">Refresh</button></p>
+    </section>
     <section class="card">
       <h2>Upload songs</h2>
       <label for="file">Audio files (mp3, m4a, ogg or wav, up to 15 MB each). You can pick many at once.</label>
@@ -111,13 +141,42 @@ button:disabled{opacity:.5;cursor:default}
   const sb=supabase.createClient(cfg.url,cfg.anonKey);
   const say=(el,t,cls)=>{el.textContent=t;el.className='msg'+(cls?' '+cls:'')};
 
+
+  const NAMES={salon:'Salon',bus:'Bus Driver',papa:'Papa Ke Gaane',raju:'Raju Mistri',rap:'Rap Session'};
+  let presCh=null;
+  function startLive(){
+    if(presCh)return;
+    presCh=sb.channel('online-now',{config:{presence:{key:'admin-'+Math.random().toString(36).slice(2)}}});
+    presCh.on('presence',{event:'sync'},()=>{
+      const keys=Object.keys(presCh.presenceState()).filter(k=>!k.startsWith('admin-'));
+      $('s_live').textContent=keys.length;
+    }).subscribe();
+  }
+  async function refreshStats(){
+    const {data,error}=await sb.rpc('admin_stats',{p_days:14});
+    if(error||!data){$('smsg').textContent='Stats are not set up yet. Run supabase/analytics.sql in the Supabase SQL Editor.';$('smsg').className='msg err';return}
+    $('smsg').textContent='';
+    $('s_tv').textContent=data.today_visitors;$('s_tvis').textContent=data.today_visits;
+    $('s_total').textContent=data.total_visitors;$('s_songs').textContent=data.songs_total;
+    $('s_plays').textContent=data.plays_today;$('s_msgs').textContent=data.messages_today;
+    const bt=data.songs_by_theme||{};
+    $('s_theme').textContent=Object.keys(NAMES).map(k=>NAMES[k]+' '+(bt[k]||0)).join(' · ');
+    const days=data.daily||[],max=Math.max(1,...days.map(x=>x.visitors));
+    const ch=$('chart'),ax=$('axis');ch.textContent='';ax.textContent='';
+    days.forEach(x=>{const b=document.createElement('div');b.style.height=Math.max(2,x.visitors/max*100)+'%';b.title=x.day+': '+x.visitors+' visitors, '+x.visits+' visits';const i=document.createElement('i');i.textContent=x.visitors;b.append(i);ch.append(b);const a=document.createElement('span');a.textContent=x.day.slice(8);ax.append(a)});
+    const tp=$('s_top');tp.textContent='';
+    (data.top_songs||[]).forEach(x=>{const li=document.createElement('li');li.textContent=x.title+' ('+(NAMES[x.theme]||x.theme)+'): '+x.plays+' plays';tp.append(li)});
+    if(!(data.top_songs||[]).length)tp.textContent='No songs yet.';
+  }
+  $('srefresh').onclick=refreshStats;
+  setInterval(()=>{if(!$('panel').hidden)refreshStats()},60000);
   async function route(){
     const {data}=await sb.auth.getSession();
     if(!data.session){$('login').hidden=false;$('panel').hidden=true;$('out').hidden=true;return}
     const {data:ok}=await sb.rpc('is_admin');
     if(!ok){$('login').hidden=false;$('panel').hidden=true;$('out').hidden=false;say($('lmsg'),'This account is not an admin.','err');return}
     $('login').hidden=true;$('panel').hidden=false;$('out').hidden=false;
-    refreshSongs();refreshChat();
+    refreshSongs();refreshChat();refreshStats();startLive();
   }
 
   $('go').onclick=async()=>{

@@ -112,5 +112,22 @@
     $('live').textContent = Object.keys(pr.presenceState()).length + ' online';
   }).subscribe(st => { if (st === 'SUBSCRIBED') pr.track({ at: Date.now() }); });
 
+  /* ---------- Simple analytics (visits and plays) ---------- */
+  try {
+    let vid = localStorage.getItem('mw_vid');
+    if (!vid) { vid = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()); localStorage.setItem('mw_vid', vid); }
+    if (!sessionStorage.getItem('mw_visit')) {
+      sessionStorage.setItem('mw_visit', '1');
+      sb.from('visits').insert({ visitor: vid, theme: S[cur].id }).then(() => {}, () => {});
+    }
+  } catch (e) {}
+  let playedFor = null;
+  audio.addEventListener('playing', () => {
+    const s = songs[idx];
+    if (!s || playedFor === s.id) return;
+    playedFor = s.id;
+    sb.from('plays').insert({ song_id: s.id }).then(() => {}, () => {});
+  });
+
   loadTheme();
 })();

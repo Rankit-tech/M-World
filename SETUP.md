@@ -44,3 +44,6 @@ GitHub Pages on karo: Settings > Pages > Deploy from a branch > `main` / root.
 - **Free project 1 hafte tak koi use na kare to pause ho jaata hai.** Dashboard se "Restore" dabane par wapas chalu ho jaata hai, data safe rehta hai. Roz kuch visitors aate rahe to ye nahi hota.
 - **Public chat mein spam aa sakta hai.** Abhi sirf 1.5 second ka gap aur 200 akshar ki limit hai. Zyada spam aaye to bata dena, hum captcha ya blocklist jodenge.
 - Ye code abhi kisi asli Supabase project ke saath nahi chala hai. Pehla test aap Step 6 ke baad karo: chat bhejo, ek gaana upload karo, aur dekho ki chale.
+
+## Dashboard (traffic, live users, plays)
+`supabase/analytics.sql` ko SQL Editor mein ek baar run karo (schema.sql ke baad). Phir `admin.html` ke upar Dashboard mein live users, roz ke visitors, total visitors, plays aur top songs dikhte hain.
