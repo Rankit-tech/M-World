@@ -5,6 +5,13 @@
   if (!cfg.url || !cfg.anonKey || !window.supabase) return;
   const sb = supabase.createClient(cfg.url, cfg.anonKey);
 
+  const rnd = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now() + String(Math.random()).slice(2);
+  function stored(k) {
+    try { let v = localStorage.getItem(k); if (!v) { v = rnd(); localStorage.setItem(k, v); } return v; }
+    catch (e) { return rnd(); }
+  }
+  const vid = stored('mw_vid');
+
   /* ---------- Songs ---------- */
   const audio = new Audio();
   audio.preload = 'none';
@@ -22,7 +29,9 @@
     $('track').textContent = s.title;
     $('artist').textContent = [s.artist, s.credit].filter(Boolean).join(' \u00b7 ');
   }
+  let listened = 0, lastT = null, gotListen = false, gotDone = false;
   function load(i, autoplay) {
+    listened = 0; lastT = null; gotListen = false; gotDone = false;
     idx = (i + songs.length) % songs.length;
     audio.src = urlOf(songs[idx].file_path);
     show();
@@ -35,7 +44,8 @@
     on = false; audio.pause(); audio.removeAttribute('src'); setIcon(false);
     songs = []; idx = 0;
     const id = S[cur].id;
-    const { data, error } = await sb.from('songs').select('*').eq('theme', id).order('created_at', { ascending: true });
+    let { data, error } = await sb.rpc('ranked_songs', { p_theme: id });
+    if (error) ({ data, error } = await sb.from('songs').select('*').eq('theme', id).order('created_at', { ascending: true }));
     if (S[cur].id !== id) return;                       // theme changed while loading
     if (error || !data || !data.length) {
       $('track').textContent = 'No songs yet';
@@ -60,12 +70,24 @@
   $('next').onclick = () => { if (songs.length) load(idx + 1, on); else tune(cur + 1); };
   $('vol').addEventListener('click', () => { audio.muted = muted; });
 
+  function logPlay(kind) {
+    const s = songs[idx]; if (!s) return;
+    sb.from('plays').insert({ song_id: s.id, kind, visitor: vid }).then(() => {}, () => {});
+  }
   audio.addEventListener('timeupdate', () => {
+    const t = audio.currentTime;
+    if (lastT !== null && !audio.paused) { const d = t - lastT; if (d > 0 && d < 1.5) listened += d; }
+    lastT = t;
+    if (!gotListen && listened >= 20) { gotListen = true; logPlay('listen'); }
     if (audio.duration) $('fill').style.width = (audio.currentTime / audio.duration * 100) + '%';
     $('t1').textContent = fmt(audio.currentTime);
   });
   audio.addEventListener('loadedmetadata', () => { $('t2').textContent = fmt(audio.duration); });
-  audio.addEventListener('ended', () => { if (songs.length) load(idx + 1, true); });
+  audio.addEventListener('ended', () => {
+    if (!songs.length) return;
+    if (!gotDone && (gotListen || (audio.duration && listened >= audio.duration * 0.8))) { gotDone = true; logPlay('complete'); }
+    load(idx + 1, true);
+  });
   audio.addEventListener('error', () => {
     if (!audio.getAttribute('src')) return;
     on = false; setIcon(false); $('artist').textContent = 'Could not load this song';
@@ -78,16 +100,35 @@
     audio.currentTime = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * audio.duration;
   });
 
-  /* ---------- Public live chat ---------- */
+  /* ---------- Public live chat (fixed IDs) ---------- */
+  const secret = stored('mw_secret') + stored('mw_secret2');
+  let myId = null, isAdmin = false;
+  async function sha(t) {
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
+    return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+  (async () => {
+    try { myId = 'MW-' + (await sha(secret)).slice(0, 6).toUpperCase(); } catch (e) { myId = null; }
+    try {
+      const { data } = await sb.auth.getSession();
+      if (data && data.session) { const r = await sb.rpc('is_admin'); if (r.data === true) isAdmin = true; }
+    } catch (e) {}
+    $('myid').textContent = isAdmin ? 'Admin \u2713' : (myId ? 'Your ID: ' + myId : 'Your ID: \u2013');
+    loadChat();
+  })();
+
   const seen = new Set();
-  function render(m) { addMsg(String(m.name).slice(0, 20), String(m.text).slice(0, 200), false, m.created_at); }
+  function render(m) {
+    const adm = !!m.by_admin;
+    const me = adm ? isAdmin : (myId !== null && m.name === myId);
+    addMsg(String(m.name).slice(0, 20), String(m.text).slice(0, 200), me, m.created_at, adm);
+  }
   async function loadChat() {
-    const { data } = await sb.from('messages').select('*').order('created_at', { ascending: false }).limit(50);
+    const { data } = await sb.from('messages').select('id,name,text,created_at,by_admin').order('created_at', { ascending: false }).limit(50);
     $('msgs').querySelectorAll('.m').forEach(n => n.remove());
     seen.clear();
     (data || []).reverse().forEach(m => { seen.add(m.id); render(m); });
   }
-  loadChat();
   sb.channel('public-messages')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
       const m = p.new; if (!m || seen.has(m.id)) return; seen.add(m.id); render(m);
@@ -98,15 +139,15 @@
   send = async function () {
     const t = cin.value.trim(); if (!t) return;
     if (Date.now() - last < 1500) return; last = Date.now();
-    const name = ($('cname').value.trim() || 'Guest').slice(0, 20);
-    const { error } = await sb.from('messages').insert({ name, text: t.slice(0, 200) });
-    if (error) note('Message not sent. Try again in a moment.'); else cin.value = '';
+    const { error } = await sb.from('messages').insert({ text: t.slice(0, 200), secret });
+    if (!error) { cin.value = ''; return; }
+    note(/slow down/.test(error.message || '') ? 'Slow down a little.' : 'Message not sent. Try again in a moment.');
   };
   $('csend').onclick = send;
 
   /* ---------- Real online count ---------- */
   clearInterval(fake);
-  const key = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Math.random());
+  const key = rnd();
   const pr = sb.channel('online-now', { config: { presence: { key } } });
   pr.on('presence', { event: 'sync' }, () => {
     $('live').textContent = Object.keys(pr.presenceState()).length + ' online';
@@ -114,20 +155,11 @@
 
   /* ---------- Simple analytics (visits and plays) ---------- */
   try {
-    let vid = localStorage.getItem('mw_vid');
-    if (!vid) { vid = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()); localStorage.setItem('mw_vid', vid); }
     if (!sessionStorage.getItem('mw_visit')) {
       sessionStorage.setItem('mw_visit', '1');
       sb.from('visits').insert({ visitor: vid, theme: S[cur].id }).then(() => {}, () => {});
     }
   } catch (e) {}
-  let playedFor = null;
-  audio.addEventListener('playing', () => {
-    const s = songs[idx];
-    if (!s || playedFor === s.id) return;
-    playedFor = s.id;
-    sb.from('plays').insert({ song_id: s.id }).then(() => {}, () => {});
-  });
 
   loadTheme();
 })();

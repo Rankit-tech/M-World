@@ -46,7 +46,7 @@ header{gap:.5rem}
 .chat h3{margin:0;padding:.7rem 1rem;font:600 1rem var(--body);display:flex;justify-content:space-between;align-items:center;gap:.6rem;border-bottom:1px solid rgba(255,255,255,.15)}
 #cclose{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;padding:0;cursor:pointer}
 .chat h3 span{margin-right:auto}
-#cname{width:8.5rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;color:var(--ink);padding:.3rem .7rem;font:500 .85rem var(--body)}
+#myid{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;color:var(--ink);padding:.25rem .7rem;font:600 .75rem var(--body);letter-spacing:.04em;white-space:nowrap}.m .bub b.adm{color:#fbbf24!important}
 #msgs>:first-child{margin-top:auto}
 #msgs{flex:1;overflow-y:auto;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.5rem;font-size:.95rem;overflow-wrap:anywhere}
 .m{display:flex;justify-content:flex-start;max-width:100%}
@@ -134,7 +134,7 @@ h1{padding:.14em .05em .2em;line-height:1.15}
   <div class="menu"><button id="menuBtn" aria-haspopup="true" aria-expanded="false">Change Theme</button><div class="drop" id="tabs" aria-label="Stations" hidden></div></div>
 </header>
 <section class="chat" id="chat" aria-label="Live chat" hidden>
-  <h3><span>Live chat</span><input id="cname" maxlength="20" aria-label="Your name"><button id="cclose" aria-label="Close chat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button></h3>
+  <h3><span>Live chat</span><small id="myid" title="Your fixed chat ID. It cannot be changed.">Your ID: …</small><button id="cclose" aria-label="Close chat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button></h3>
   <div class="pin" id="pin">📌 Welcome! Be kind, enjoy the music, and say hi.</div>
   <div id="msgs" aria-live="polite"></div>
   <div class="cform"><input id="cin" maxlength="200" placeholder="Write a message" aria-label="Message"><button id="csend" aria-label="Send"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button></div>
@@ -305,12 +305,12 @@ addEventListener('resize',()=>{if(rainOn)sizeRain()});
 $('supportTop').onclick=()=>$('dlg').showModal();
 let room=null;
 const msgs=$('msgs'),cin=$('cin');
-$('cname').value='Guest'+Math.floor(100+Math.random()*900);
+const demoId='MW-'+Math.floor(0x100000+Math.random()*0xefffff).toString(16).toUpperCase();$('myid').textContent='Your ID: '+demoId;
 function addNode(d){msgs.append(d);msgs.scrollTop=msgs.scrollHeight;while(msgs.children.length>100)msgs.firstChild.remove()}
 function note(t){const d=document.createElement('div');d.className='note';d.textContent=t;addNode(d)}
 const COL=['#a3e635','#60a5fa','#fb923c','#f472b6','#22d3ee','#facc15','#c084fc','#34d399'];
 function nameColor(n){let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))>>>0;return COL[h%COL.length]}
-function addMsg(n,t,me,ts){const d=document.createElement('div');d.className='m'+(me?' me':'');const bub=document.createElement('div');bub.className='bub';const b=document.createElement('b');b.textContent=n;b.style.color=nameColor(n);const p=document.createElement('p');p.textContent=t;const tm=document.createElement('time');tm.textContent=new Date(ts||Date.now()).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}).toLowerCase();bub.append(b,p,tm);d.append(bub);addNode(d)}
+function addMsg(n,t,me,ts,adm){const d=document.createElement('div');d.className='m'+(me?' me':'');const bub=document.createElement('div');bub.className='bub';const b=document.createElement('b');b.textContent=adm?n+' ✓':n;if(adm)b.className='adm';else b.style.color=nameColor(n);const p=document.createElement('p');p.textContent=t;const tm=document.createElement('time');tm.textContent=new Date(ts||Date.now()).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}).toLowerCase();bub.append(b,p,tm);d.append(bub);addNode(d)}
 note('Say hi to everyone online right now.');
 $('chatBtn').onclick=()=>{const c=$('chat');c.hidden=!c.hidden;$('chatBtn').setAttribute('aria-expanded',!c.hidden);if(!c.hidden)cin.focus()};
 function closeChat(){$('chat').hidden=true;$('chatBtn').setAttribute('aria-expanded','false')}
@@ -322,7 +322,7 @@ function send(){
   const t=cin.value.trim();if(!t)return;
   if(!room){note('Live chat is not connected in this view.');return}
   if(Date.now()-last<1000)return;last=Date.now();
-  room.emit('chat',{n:($('cname').value.trim()||'Guest').slice(0,20),t:t.slice(0,200)})
+  room.emit('chat',{n:demoId,t:t.slice(0,200)})
     .then(()=>{cin.value=''})
     .catch(e=>note(e&&e.code==='not_permitted'?'With your access level you can read the chat but not send.':'Message not sent. Try again.'));
 }
@@ -332,7 +332,7 @@ if(window.claude&&claude.use){
   claude.use('user').then(async u=>{
     if(!u)return;
     if(await u.isOwner()){
-      $('cname').value='Admin';
+      $('myid').textContent='Admin';
       let id=null;try{id=await u.id()}catch(e){}
       note(id?'You are the admin. Your ID: '+id:'You are the admin.');
     }

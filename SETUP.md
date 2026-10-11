@@ -47,3 +47,9 @@ GitHub Pages on karo: Settings > Pages > Deploy from a branch > `main` / root.
 
 ## Dashboard (traffic, live users, plays)
 `supabase/analytics.sql` ko SQL Editor mein ek baar run karo (schema.sql ke baad). Phir `admin.html` ke upar Dashboard mein live users, roz ke visitors, total visitors, plays aur top songs dikhte hain.
+
+## Update v2: ranking, fixed chat ID, admin tabs
+`supabase/update-v2.sql` ko SQL Editor mein ek baar run karo (schema.sql aur analytics.sql ke baad). Phir:
+- **Ranking:** jo gaana log 20 second tak sunte hain wo "listen" gina jata hai, poora sun lein to double. Sabse zyada score wala gaana har theme mein #1 par aur sabse pehle bajta hai. Naye gaane neeche se shuru hote hain.
+- **Chat ID:** har visitor ko fixed ID milti hai (jaise `MW-4F2A91`). Naam badal nahi sakte. Admin ke message par `Admin ✓` dikhta hai.
+- **Admin page:** Dashboard, Upload, Songs, Chat alag tabs mein. Gaane ke saath teen dot (⋮) se edit (title, artist, theme) ya delete. Chat mein ID ke hisaab se message ya us ID ke saare message delete kar sakte ho.

@@ -9,8 +9,8 @@
 :root{color-scheme:dark;--bg:#12050a;--panel:#241017;--ink:#f7ecd4;--mute:#cdb59a;--accent:#d4af37;--line:rgba(255,255,255,.18)}
 *{box-sizing:border-box}
 body{margin:0;background:radial-gradient(60% 40% at 15% 0%,#7a1f2b,transparent 70%),var(--bg);color:var(--ink);font:400 1rem/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Arial,sans-serif;min-height:100vh}
-main{max-width:860px;margin:0 auto;padding:1.5rem 1rem 4rem}
-h1{font-size:1.6rem;margin:.2rem 0 1rem}
+main{max-width:860px;margin:0 auto;padding:1rem 1rem 4rem}
+h1{font-size:1.5rem;margin:.2rem 0}
 h2{font-size:1.15rem;margin:0 0 .8rem;color:var(--accent)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:1rem;padding:1.1rem;margin:0 0 1.2rem}
 label{display:block;font-size:.85rem;color:var(--mute);margin:.7rem 0 .25rem}
@@ -18,25 +18,22 @@ input,select{width:100%;padding:.65rem .8rem;border-radius:.7rem;border:1px soli
 input[type=file]{padding:.5rem}
 button{font:600 .95rem inherit;font-family:inherit;border:0;border-radius:999px;padding:.6rem 1.2rem;cursor:pointer;background:var(--accent);color:#1a0d08}
 button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
-button.del{background:transparent;color:#ff8a8a;border:1px solid #ff8a8a55;padding:.3rem .8rem}
 button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
 @media(max-width:560px){.row{grid-template-columns:1fr}}
 .msg{margin-top:.8rem;font-size:.9rem;color:var(--mute);min-height:1.2em}
 .err{color:#ff8a8a}.ok{color:#7be0a0}
-.item{display:flex;gap:.8rem;align-items:center;justify-content:space-between;padding:.6rem 0;border-top:1px solid var(--line)}
-.item:first-child{border-top:0}
-.item small{display:block;color:var(--mute)}
-.item div{min-width:0;overflow-wrap:anywhere}
-.bar{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;padding:.4rem 0 .8rem}
 .hint{margin:0 0 .8rem;color:var(--mute);font-size:.9rem}
-.grp{margin:1rem 0 .3rem;font-weight:700;color:var(--accent)}
-.song{border-top:1px solid var(--line);padding:.7rem 0}
-.song .r{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
-.song .acts{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
-.song audio{height:34px;max-width:100%}
-@media(max-width:560px){.song .r{grid-template-columns:1fr}}
 
+/* tabs */
+.tabs{position:sticky;top:0;z-index:10;display:flex;gap:.4rem;overflow-x:auto;padding:.5rem 0 .7rem;margin:0 0 .6rem;background:linear-gradient(var(--bg) 75%,transparent);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;background:transparent;color:var(--ink);border:1px solid var(--line);padding:.5rem 1.1rem}
+.tabs button[aria-selected=true]{background:var(--accent);color:#1a0d08;border-color:var(--accent)}
+
+/* dashboard */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin-bottom:1rem}
 .stat{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:.9rem;padding:.7rem .9rem}
 .stat b{display:block;font-size:1.6rem;line-height:1.2}
@@ -47,6 +44,34 @@ button:disabled{opacity:.5;cursor:default}
 .chart div i{position:absolute;left:0;right:0;bottom:100%;font-size:.65rem;text-align:center;font-style:normal;color:var(--mute)}
 .axis{display:flex;gap:4px;font-size:.62rem;color:var(--mute)}.axis span{flex:1;text-align:center;overflow:hidden}
 .top{margin:.5rem 0 0;padding-left:1.1rem;color:var(--mute)}
+
+/* songs */
+.chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:0 0 .8rem}
+.chips button{background:transparent;color:var(--ink);border:1px solid var(--line);padding:.35rem .9rem;font-size:.85rem}
+.chips button[aria-pressed=true]{background:rgba(212,175,55,.2);border-color:var(--accent);color:var(--accent)}
+.grp{margin:1rem 0 .2rem;font-weight:700;color:var(--accent)}
+.song,.item{display:flex;align-items:center;gap:.7rem;padding:.6rem 0;border-top:1px solid var(--line)}
+.grp+.song,.grp+.item,.item:first-child{border-top:0}
+.rk{flex:none;min-width:2.2rem;text-align:center;font-weight:700;color:var(--mute);font-size:.9rem}
+.rk.r1{color:#ffd54a}.rk.r2{color:#d9dde3}.rk.r3{color:#e0a070}
+.sm{flex:1;min-width:0;overflow-wrap:anywhere}
+.sm small{display:block;color:var(--mute)}
+.sm b{font-weight:600}
+.ib{flex:none;width:38px;height:38px;padding:0;border-radius:50%;display:grid;place-items:center;background:transparent;color:var(--ink);border:1px solid var(--line)}
+.ib:hover{background:rgba(255,255,255,.1)}
+.ib.on{background:var(--accent);color:#1a0d08;border-color:var(--accent)}
+.ib svg{display:block}
+
+/* three-dot menu */
+.menu{position:absolute;z-index:50;min-width:200px;padding:.3rem;border-radius:.9rem;background:#2d1620;border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.menu button{display:block;width:100%;text-align:left;background:none;color:var(--ink);border-radius:.6rem;padding:.6rem .8rem;font-weight:500}
+.menu button:hover{background:rgba(255,255,255,.1)}
+.menu button.danger{color:#ff9a9a}
+
+dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:1.1rem;padding:1.2rem;width:min(26rem,92vw)}
+dialog::backdrop{background:rgba(0,0,0,.65)}
+dialog h2{margin-top:0}
+.acts{display:flex;gap:.6rem;justify-content:flex-end;margin:1rem 0 0}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -68,7 +93,15 @@ button:disabled{opacity:.5;cursor:default}
   </section>
 
   <div id="panel" hidden>
-    <section class="card">
+    <div class="tabs" role="tablist" aria-label="Admin sections" id="tabbar">
+      <button role="tab" data-tab="dash">Dashboard</button>
+      <button role="tab" data-tab="upload">Upload</button>
+      <button role="tab" data-tab="songs">Songs</button>
+      <button role="tab" data-tab="chat">Chat</button>
+    </div>
+
+    <!-- Dashboard -->
+    <section class="card" data-pane="dash" role="tabpanel">
       <h2>Dashboard</h2>
       <div class="stats">
         <div class="stat live"><b id="s_live">-</b><span>Live now</span></div>
@@ -76,18 +109,20 @@ button:disabled{opacity:.5;cursor:default}
         <div class="stat"><b id="s_tvis">-</b><span>Visits today</span></div>
         <div class="stat"><b id="s_total">-</b><span>Total visitors</span></div>
         <div class="stat"><b id="s_songs">-</b><span>Songs uploaded</span></div>
-        <div class="stat"><b id="s_plays">-</b><span>Plays today</span></div>
+        <div class="stat"><b id="s_plays">-</b><span>Listens today</span></div>
         <div class="stat"><b id="s_msgs">-</b><span>Chat messages today</span></div>
       </div>
       <div class="hint">Visitors per day (last 14 days, India time)</div>
       <div class="chart" id="chart"></div><div class="axis" id="axis"></div>
       <div class="hint" style="margin-top:.8rem">Songs per theme: <span id="s_theme">-</span></div>
-      <div class="hint">Most played songs</div>
+      <div class="hint">Top songs (people who stayed and listened)</div>
       <ol class="top" id="s_top"></ol>
       <div class="msg" id="smsg"></div>
       <p><button class="ghost" id="srefresh">Refresh</button></p>
     </section>
-    <section class="card">
+
+    <!-- Upload -->
+    <section class="card" data-pane="upload" role="tabpanel" hidden>
       <h2>Upload songs</h2>
       <label for="file">Audio files (mp3, m4a, ogg or wav, up to 15 MB each). You can pick many at once.</label>
       <input id="file" type="file" accept="audio/*" multiple>
@@ -96,14 +131,7 @@ button:disabled{opacity:.5;cursor:default}
         <div><label for="artist">Artist</label><input id="artist" maxlength="120"></div>
       </div>
       <div class="row">
-        <div><label for="theme">Which theme will play these songs?</label>
-          <select id="theme">
-            <option value="salon">Salon</option>
-            <option value="bus">Bus Driver</option>
-            <option value="papa">Papa Ke Gaane</option>
-            <option value="raju">Raju Mistri</option>
-            <option value="rap">Rap Session</option>
-          </select></div>
+        <div><label for="theme">Which theme will play these songs?</label><select id="theme"></select></div>
         <div><label for="license">License</label>
           <select id="license">
             <option>I own it / have written permission</option>
@@ -118,18 +146,35 @@ button:disabled{opacity:.5;cursor:default}
       <div class="msg" id="umsg"></div>
     </section>
 
-    <section class="card">
-      <h2>Songs by theme</h2>
-      <p class="hint">Change the theme dropdown on any song and press Save to move it to another theme. Songs play in the order they were added.</p>
+    <!-- Songs -->
+    <section class="card" data-pane="songs" role="tabpanel" hidden>
+      <h2>Songs</h2>
+      <p class="hint">Songs are ranked by listeners: the most listened song is #1 and plays first on the site. A listen counts when someone stays for 20 seconds, and a full play counts double. New songs start at the bottom and move up as people listen. Use the three dots on a song to edit or delete it.</p>
+      <div class="msg err" id="rankwarn" hidden>Ranking is not set up yet. Run supabase/update-v2.sql in the Supabase SQL Editor.</div>
+      <div class="chips" id="chips" role="group" aria-label="Filter by theme"></div>
       <div id="songs"></div>
     </section>
 
-    <section class="card">
-      <h2>Chat moderation (latest 50 messages)</h2>
+    <!-- Chat -->
+    <section class="card" data-pane="chat" role="tabpanel" hidden>
+      <div class="bar" style="padding:0 0 .6rem"><h2 style="margin:0">Chat moderation</h2><button class="ghost" id="crefresh">Refresh</button></div>
+      <p class="hint">Latest 50 messages. Every visitor has a fixed ID (like MW-4F2A91) and cannot change it. Use the three dots to delete one message or everything from one ID.</p>
       <div id="chat"></div>
     </section>
   </div>
 </main>
+
+<dialog id="editDlg" aria-labelledby="editTitle">
+  <form id="editForm">
+    <h2 id="editTitle">Edit song</h2>
+    <label for="e_title">Title</label><input id="e_title" maxlength="120" required>
+    <label for="e_artist">Artist</label><input id="e_artist" maxlength="120">
+    <label for="e_theme">Theme (which team it plays in)</label><select id="e_theme"></select>
+    <label for="e_credit">Credit line</label><input id="e_credit" maxlength="160">
+    <div class="msg" id="e_msg"></div>
+    <div class="acts"><button type="button" class="ghost" id="e_cancel">Cancel</button><button type="submit" id="e_save">Save</button></div>
+  </form>
+</dialog>
 
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -140,9 +185,50 @@ button:disabled{opacity:.5;cursor:default}
   if(!cfg.url||!cfg.anonKey||!window.supabase){$('setup').hidden=false;return}
   const sb=supabase.createClient(cfg.url,cfg.anonKey);
   const say=(el,t,cls)=>{el.textContent=t;el.className='msg'+(cls?' '+cls:'')};
+  const THEMES={salon:'Salon',bus:'Bus Driver',papa:'Papa Ke Gaane',raju:'Raju Mistri',rap:'Rap Session'};
+  const NAMES=THEMES;
+  ['theme','e_theme'].forEach(id=>Object.entries(THEMES).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v;$(id).append(o)}));
 
+  const SVG={
+    dots:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>',
+    play:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
+    stop:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>'
+  };
+  function iconBtn(kind,label){const b=document.createElement('button');b.type='button';b.className='ib';b.setAttribute('aria-label',label);b.innerHTML=SVG[kind];return b}
 
-  const NAMES={salon:'Salon',bus:'Bus Driver',papa:'Papa Ke Gaane',raju:'Raju Mistri',rap:'Rap Session'};
+  /* ---------- three-dot menu ---------- */
+  let menuEl=null,menuFor=null;
+  function closeMenu(){if(menuEl){menuEl.remove();menuEl=null;menuFor=null}}
+  function openMenu(btn,items){
+    if(menuFor===btn){closeMenu();return}
+    closeMenu();
+    const m=document.createElement('div');m.className='menu';m.setAttribute('role','menu');
+    items.forEach(it=>{const b=document.createElement('button');b.type='button';b.setAttribute('role','menuitem');b.textContent=it.label;if(it.danger)b.className='danger';b.onclick=()=>{closeMenu();it.fn()};m.append(b)});
+    document.body.append(m);
+    const r=btn.getBoundingClientRect(),w=m.offsetWidth;
+    m.style.top=(window.scrollY+r.bottom+4)+'px';
+    m.style.left=Math.max(8,Math.min(window.scrollX+r.right-w,document.documentElement.clientWidth-w-8))+'px';
+    menuEl=m;menuFor=btn;
+  }
+  document.addEventListener('click',e=>{if(menuEl&&!menuEl.contains(e.target)&&!(menuFor&&menuFor.contains(e.target)))closeMenu()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
+  window.addEventListener('resize',closeMenu);
+
+  /* ---------- tabs ---------- */
+  const TABS=['dash','upload','songs','chat'];
+  function showTab(t){
+    if(!TABS.includes(t))t='dash';
+    closeMenu();
+    document.querySelectorAll('#tabbar button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
+    document.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==t);
+    try{sessionStorage.setItem('mw_tab',t)}catch(e){}
+    if(t==='dash')refreshStats();
+    if(t==='songs')refreshSongs();
+    if(t==='chat')refreshChat();
+  }
+  document.querySelectorAll('#tabbar button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+  /* ---------- live users ---------- */
   let presCh=null;
   function startLive(){
     if(presCh)return;
@@ -152,10 +238,12 @@ button:disabled{opacity:.5;cursor:default}
       $('s_live').textContent=keys.length;
     }).subscribe();
   }
+
+  /* ---------- dashboard ---------- */
   async function refreshStats(){
     const {data,error}=await sb.rpc('admin_stats',{p_days:14});
-    if(error||!data){$('smsg').textContent='Stats are not set up yet. Run supabase/analytics.sql in the Supabase SQL Editor.';$('smsg').className='msg err';return}
-    $('smsg').textContent='';
+    if(error||!data){say($('smsg'),'Stats are not set up yet. Run supabase/analytics.sql (and then update-v2.sql) in the Supabase SQL Editor.','err');return}
+    say($('smsg'),'');
     $('s_tv').textContent=data.today_visitors;$('s_tvis').textContent=data.today_visits;
     $('s_total').textContent=data.total_visitors;$('s_songs').textContent=data.songs_total;
     $('s_plays').textContent=data.plays_today;$('s_msgs').textContent=data.messages_today;
@@ -165,20 +253,23 @@ button:disabled{opacity:.5;cursor:default}
     const ch=$('chart'),ax=$('axis');ch.textContent='';ax.textContent='';
     days.forEach(x=>{const b=document.createElement('div');b.style.height=Math.max(2,x.visitors/max*100)+'%';b.title=x.day+': '+x.visitors+' visitors, '+x.visits+' visits';const i=document.createElement('i');i.textContent=x.visitors;b.append(i);ch.append(b);const a=document.createElement('span');a.textContent=x.day.slice(8);ax.append(a)});
     const tp=$('s_top');tp.textContent='';
-    (data.top_songs||[]).forEach(x=>{const li=document.createElement('li');li.textContent=x.title+' ('+(NAMES[x.theme]||x.theme)+'): '+x.plays+' plays';tp.append(li)});
+    (data.top_songs||[]).forEach(x=>{const li=document.createElement('li');li.textContent=x.title+' ('+(NAMES[x.theme]||x.theme)+'): '+x.plays+' listens, '+(x.completes||0)+' full plays';tp.append(li)});
     if(!(data.top_songs||[]).length)tp.textContent='No songs yet.';
   }
   $('srefresh').onclick=refreshStats;
-  setInterval(()=>{if(!$('panel').hidden)refreshStats()},60000);
+  setInterval(()=>{if(!$('panel').hidden&&!document.querySelector('[data-pane=dash]').hidden)refreshStats()},60000);
+
+  /* ---------- login ---------- */
   async function route(){
     const {data}=await sb.auth.getSession();
     if(!data.session){$('login').hidden=false;$('panel').hidden=true;$('out').hidden=true;return}
     const {data:ok}=await sb.rpc('is_admin');
     if(!ok){$('login').hidden=false;$('panel').hidden=true;$('out').hidden=false;say($('lmsg'),'This account is not an admin.','err');return}
     $('login').hidden=true;$('panel').hidden=false;$('out').hidden=false;
-    refreshSongs();refreshChat();refreshStats();startLive();
+    startLive();
+    let t='dash';try{t=sessionStorage.getItem('mw_tab')||'dash'}catch(e){}
+    showTab(t);
   }
-
   $('go').onclick=async()=>{
     say($('lmsg'),'Signing in...');
     const {error}=await sb.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});
@@ -187,11 +278,9 @@ button:disabled{opacity:.5;cursor:default}
   };
   $('out').onclick=async()=>{await sb.auth.signOut();route()};
 
+  /* ---------- upload ---------- */
   const safe=n=>n.toLowerCase().replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(-60)||'song';
-
-  const THEMES={salon:'Salon',bus:'Bus Driver',papa:'Papa Ke Gaane',raju:'Raju Mistri',rap:'Rap Session'};
   const nice=n=>n.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim().slice(0,120)||'Untitled';
-
   $('up').onclick=async()=>{
     const files=[...$('file').files];
     if(!files.length){say($('umsg'),'Choose at least one audio file.','err');return}
@@ -212,66 +301,112 @@ button:disabled{opacity:.5;cursor:default}
     }
     $('up').disabled=false;
     if(fail.length)say($('umsg'),done+' uploaded. Failed: '+fail.join('; '),'err');
-    else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'".','ok');
+    else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'". Open the Songs tab to see them.','ok');
     $('file').value='';$('title').value='';
-    refreshSongs();
   };
 
-  function item(main,sub,onDel){
-    const d=document.createElement('div');d.className='item';
-    const t=document.createElement('div');
-    const b=document.createElement('b');b.textContent=main;const s=document.createElement('small');s.textContent=sub;
-    t.append(b,s);
-    const x=document.createElement('button');x.className='del';x.textContent='Delete';x.onclick=()=>{if(confirm('Delete this?'))onDel()};
-    d.append(t,x);return d;
+  /* ---------- songs ---------- */
+  let allSongs=[],filter='all',pv=new Audio(),pvId=null,pvBtn=null;
+  pv.addEventListener('ended',stopPreview);
+  function stopPreview(){pv.pause();if(pvBtn){pvBtn.classList.remove('on');pvBtn.innerHTML=SVG.play;pvBtn.setAttribute('aria-label','Preview')}pvId=null;pvBtn=null}
+  function preview(s,btn){
+    if(pvId===s.id){stopPreview();return}
+    stopPreview();
+    pv.src=sb.storage.from('songs').getPublicUrl(s.file_path).data.publicUrl;
+    pv.play().then(()=>{pvId=s.id;pvBtn=btn;btn.classList.add('on');btn.innerHTML=SVG.stop;btn.setAttribute('aria-label','Stop preview')}).catch(()=>{});
+  }
+  async function refreshSongs(){
+    let rows=null;
+    const r=await sb.rpc('ranked_songs',{p_theme:null});
+    if(!r.error&&Array.isArray(r.data)){rows=r.data;$('rankwarn').hidden=true}
+    else{
+      const q=await sb.from('songs').select('*').order('created_at',{ascending:true});
+      const n={};rows=(q.data||[]).map(s=>({...s,listens:0,completes:0,rank:(n[s.theme]=(n[s.theme]||0)+1)}));
+      $('rankwarn').hidden=false;
+    }
+    allSongs=rows;renderSongs();
+  }
+  function renderChips(){
+    const box=$('chips');box.textContent='';
+    const mk=(k,label,n)=>{const b=document.createElement('button');b.type='button';b.textContent=label+' ('+n+')';b.setAttribute('aria-pressed',filter===k);b.onclick=()=>{filter=k;renderSongs()};box.append(b)};
+    mk('all','All',allSongs.length);
+    Object.keys(THEMES).forEach(k=>mk(k,THEMES[k],allSongs.filter(s=>s.theme===k).length));
   }
   function songRow(s){
     const d=document.createElement('div');d.className='song';
-    const r=document.createElement('div');r.className='r';
-    const ti=document.createElement('input');ti.value=s.title;ti.maxLength=120;ti.setAttribute('aria-label','Title');
-    const ar=document.createElement('input');ar.value=s.artist||'';ar.maxLength=120;ar.placeholder='Artist';ar.setAttribute('aria-label','Artist');
-    r.append(ti,ar);
-    const acts=document.createElement('div');acts.className='acts';
-    const th=document.createElement('select');th.setAttribute('aria-label','Theme');
-    Object.entries(THEMES).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v;if(k===s.theme)o.selected=true;th.append(o)});
-    const save=document.createElement('button');save.textContent='Save';
-    const del=document.createElement('button');del.className='del';del.textContent='Delete';
-    const au=document.createElement('audio');au.controls=true;au.preload='none';au.src=sb.storage.from('songs').getPublicUrl(s.file_path).data.publicUrl;
-    const st=document.createElement('span');st.className='msg';st.style.margin='0';
-    save.onclick=async()=>{
-      const t=ti.value.trim();if(!t){st.textContent='Title cannot be empty.';st.className='msg err';return}
-      save.disabled=true;
-      const {error}=await sb.from('songs').update({title:t,artist:ar.value.trim()||null,theme:th.value}).eq('id',s.id);
-      save.disabled=false;
-      if(error){st.textContent='Could not save.';st.className='msg err';return}
-      if(th.value!==s.theme){refreshSongs();return}
-      st.textContent='Saved.';st.className='msg ok';
-    };
-    del.onclick=async()=>{if(!confirm('Delete this song?'))return;
-      await sb.storage.from('songs').remove([s.file_path]);
-      await sb.from('songs').delete().eq('id',s.id);refreshSongs()};
-    acts.append(th,save,del,st);
-    d.append(r,acts,au);return d;
+    const rk=document.createElement('span');rk.className='rk'+(s.rank<=3?' r'+s.rank:'');rk.textContent='#'+s.rank;rk.title='Rank in '+(THEMES[s.theme]||s.theme);
+    const sm=document.createElement('div');sm.className='sm';
+    const b=document.createElement('b');b.textContent=s.title;
+    const sub=document.createElement('small');
+    sub.textContent=[s.artist,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
+    sm.append(b,sub);
+    const pb=iconBtn('play','Preview');pb.onclick=()=>preview(s,pb);
+    const db=iconBtn('dots','More options for '+s.title);
+    db.onclick=()=>openMenu(db,[
+      {label:'Edit title, artist, theme',fn:()=>openEdit(s)},
+      {label:'Delete song',danger:true,fn:()=>deleteSong(s)}
+    ]);
+    d.append(rk,sm,pb,db);return d;
   }
-  async function refreshSongs(){
-    const {data}=await sb.from('songs').select('*').order('created_at',{ascending:true});
+  function renderSongs(){
+    renderChips();
     const box=$('songs');box.textContent='';
-    if(!data||!data.length){box.textContent='No songs yet.';return}
-    Object.keys(THEMES).forEach(k=>{
-      const list=data.filter(s=>s.theme===k);
+    if(!allSongs.length){box.textContent='No songs yet. Use the Upload tab to add some.';return}
+    Object.keys(THEMES).filter(k=>filter==='all'||filter===k).forEach(k=>{
+      const list=allSongs.filter(s=>s.theme===k).sort((a,b)=>a.rank-b.rank);
       const h=document.createElement('div');h.className='grp';h.textContent=THEMES[k]+' ('+list.length+')';box.append(h);
       if(!list.length){const e=document.createElement('div');e.className='hint';e.textContent='No songs. This theme shows "No songs yet".';box.append(e)}
       list.forEach(s=>box.append(songRow(s)));
     });
   }
+  async function deleteSong(s){
+    if(!confirm('Delete "'+s.title+'"? This cannot be undone.'))return;
+    if(pvId===s.id)stopPreview();
+    await sb.storage.from('songs').remove([s.file_path]);
+    const {error}=await sb.from('songs').delete().eq('id',s.id);
+    if(error)alert('Could not delete: '+error.message);
+    refreshSongs();
+  }
+  let editing=null;
+  function openEdit(s){
+    editing=s;
+    $('e_title').value=s.title;$('e_artist').value=s.artist||'';$('e_theme').value=s.theme;$('e_credit').value=s.credit||'';
+    say($('e_msg'),'');$('e_save').disabled=false;$('editDlg').showModal();$('e_title').focus();
+  }
+  $('e_cancel').onclick=()=>$('editDlg').close();
+  $('editForm').onsubmit=async e=>{
+    e.preventDefault();
+    const t=$('e_title').value.trim();if(!t){say($('e_msg'),'Title cannot be empty.','err');return}
+    $('e_save').disabled=true;say($('e_msg'),'Saving...');
+    const {error}=await sb.from('songs').update({title:t,artist:$('e_artist').value.trim()||null,theme:$('e_theme').value,credit:$('e_credit').value.trim()||null}).eq('id',editing.id);
+    if(error){$('e_save').disabled=false;say($('e_msg'),'Could not save: '+error.message,'err');return}
+    $('editDlg').close();refreshSongs();
+  };
+
+  /* ---------- chat ---------- */
+  function chatRow(m){
+    const d=document.createElement('div');d.className='item';
+    const sm=document.createElement('div');sm.className='sm';
+    const b=document.createElement('b');b.textContent=m.name+(m.by_admin?' (you)':'');
+    const t=document.createElement('span');t.textContent='  '+m.text;
+    const when=document.createElement('small');when.textContent=new Date(m.created_at).toLocaleString();
+    sm.append(b,t,when);
+    const db=iconBtn('dots','More options for this message');
+    const items=[{label:'Delete this message',danger:true,fn:async()=>{await sb.from('messages').delete().eq('id',m.id);refreshChat()}}];
+    if(!m.by_admin)items.push({label:'Delete all from '+m.name,danger:true,fn:async()=>{
+      if(!confirm('Delete every message from '+m.name+'?'))return;
+      await sb.from('messages').delete().eq('name',m.name);refreshChat()}});
+    db.onclick=()=>openMenu(db,items);
+    d.append(sm,db);return d;
+  }
   async function refreshChat(){
-    const {data}=await sb.from('messages').select('*').order('created_at',{ascending:false}).limit(50);
+    const {data}=await sb.from('messages').select('id,name,text,created_at,by_admin').order('created_at',{ascending:false}).limit(50);
     const box=$('chat');box.textContent='';
     if(!data||!data.length){box.textContent='No messages yet.';return}
-    data.forEach(m=>box.append(item(m.name+': '+m.text,new Date(m.created_at).toLocaleString(),async()=>{
-      await sb.from('messages').delete().eq('id',m.id);refreshChat();
-    })));
+    data.forEach(m=>box.append(chatRow(m)));
   }
+  $('crefresh').onclick=refreshChat;
+
   route();
 })();
 </script>
