@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>M. World admin</title>
+<style>
+:root{color-scheme:dark;--bg:#12050a;--panel:#241017;--ink:#f7ecd4;--mute:#cdb59a;--accent:#d4af37;--line:rgba(255,255,255,.18)}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(60% 40% at 15% 0%,#7a1f2b,transparent 70%),var(--bg);color:var(--ink);font:400 1rem/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Arial,sans-serif;min-height:100vh}
+main{max-width:860px;margin:0 auto;padding:1.5rem 1rem 4rem}
+h1{font-size:1.6rem;margin:.2rem 0 1rem}
+h2{font-size:1.15rem;margin:0 0 .8rem;color:var(--accent)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:1rem;padding:1.1rem;margin:0 0 1.2rem}
+label{display:block;font-size:.85rem;color:var(--mute);margin:.7rem 0 .25rem}
+input,select{width:100%;padding:.65rem .8rem;border-radius:.7rem;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--ink);font:inherit}
+input[type=file]{padding:.5rem}
+button{font:600 .95rem inherit;font-family:inherit;border:0;border-radius:999px;padding:.6rem 1.2rem;cursor:pointer;background:var(--accent);color:#1a0d08}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.del{background:transparent;color:#ff8a8a;border:1px solid #ff8a8a55;padding:.3rem .8rem}
+button:disabled{opacity:.5;cursor:default}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+.msg{margin-top:.8rem;font-size:.9rem;color:var(--mute);min-height:1.2em}
+.err{color:#ff8a8a}.ok{color:#7be0a0}
+.item{display:flex;gap:.8rem;align-items:center;justify-content:space-between;padding:.6rem 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item small{display:block;color:var(--mute)}
+.item div{min-width:0;overflow-wrap:anywhere}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <div class="bar"><h1>M. World admin</h1><button class="ghost" id="out" hidden>Sign out</button></div>
+
+  <section class="card" id="setup" hidden>
+    <h2>Backend not connected</h2>
+    <p>Open <code>config.js</code> and paste your Supabase project URL and anon key. See SETUP.md.</p>
+  </section>
+
+  <section class="card" id="login" hidden>
+    <h2>Sign in</h2>
+    <label for="em">Email</label><input id="em" type="email" autocomplete="username">
+    <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password">
+    <p><button id="go">Sign in</button></p>
+    <div class="msg" id="lmsg"></div>
+  </section>
+
+  <div id="panel" hidden>
+    <section class="card">
+      <h2>Upload a song</h2>
+      <label for="file">Audio file (mp3, m4a, ogg or wav, up to 15 MB)</label>
+      <input id="file" type="file" accept="audio/*">
+      <div class="row">
+        <div><label for="title">Title</label><input id="title" maxlength="120"></div>
+        <div><label for="artist">Artist</label><input id="artist" maxlength="120"></div>
+      </div>
+      <div class="row">
+        <div><label for="theme">Theme</label>
+          <select id="theme">
+            <option value="salon">Salon</option>
+            <option value="bus">Bus Driver</option>
+            <option value="papa">Papa Ke Gaane</option>
+            <option value="raju">Raju Mistri</option>
+            <option value="rap">Rap Session</option>
+          </select></div>
+        <div><label for="license">License</label>
+          <select id="license">
+            <option>I own it / have written permission</option>
+            <option>CC0 (public domain)</option>
+            <option>CC BY (credit required)</option>
+            <option>Other (checked the terms)</option>
+          </select></div>
+      </div>
+      <label for="credit">Credit line shown under the title (needed for CC BY)</label>
+      <input id="credit" maxlength="160" placeholder="e.g. Music by Artist, CC BY 4.0">
+      <p><button id="up">Upload</button></p>
+      <div class="msg" id="umsg"></div>
+    </section>
+
+    <section class="card">
+      <h2>Songs</h2>
+      <div id="songs"></div>
+    </section>
+
+    <section class="card">
+      <h2>Chat moderation (latest 50 messages)</h2>
+      <div id="chat"></div>
+    </section>
+  </div>
+</main>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const cfg=window.MWORLD||{};
+  if(!cfg.url||!cfg.anonKey||!window.supabase){$('setup').hidden=false;return}
+  const sb=supabase.createClient(cfg.url,cfg.anonKey);
+  const say=(el,t,cls)=>{el.textContent=t;el.className='msg'+(cls?' '+cls:'')};
+
+  async function route(){
+    const {data}=await sb.auth.getSession();
+    if(!data.session){$('login').hidden=false;$('panel').hidden=true;$('out').hidden=true;return}
+    const {data:ok}=await sb.rpc('is_admin');
+    if(!ok){$('login').hidden=false;$('panel').hidden=true;$('out').hidden=false;say($('lmsg'),'This account is not an admin.','err');return}
+    $('login').hidden=true;$('panel').hidden=false;$('out').hidden=false;
+    refreshSongs();refreshChat();
+  }
+
+  $('go').onclick=async()=>{
+    say($('lmsg'),'Signing in...');
+    const {error}=await sb.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});
+    if(error){say($('lmsg'),'Sign in failed. Check email and password.','err');return}
+    $('pw').value='';say($('lmsg'),'');route();
+  };
+  $('out').onclick=async()=>{await sb.auth.signOut();route()};
+
+  const safe=n=>n.toLowerCase().replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(-60)||'song';
+
+  $('up').onclick=async()=>{
+    const f=$('file').files[0],title=$('title').value.trim();
+    if(!f){say($('umsg'),'Choose an audio file first.','err');return}
+    if(!f.type.startsWith('audio/')){say($('umsg'),'That file is not audio.','err');return}
+    if(f.size>15*1024*1024){say($('umsg'),'File is bigger than 15 MB. Convert it to 128 kbps mp3 first.','err');return}
+    if(!title){say($('umsg'),'Add a title.','err');return}
+    const theme=$('theme').value,path=theme+'/'+Date.now()+'-'+safe(f.name);
+    $('up').disabled=true;say($('umsg'),'Uploading...');
+    const u=await sb.storage.from('songs').upload(path,f,{contentType:f.type,upsert:false});
+    if(u.error){$('up').disabled=false;say($('umsg'),'Upload failed: '+u.error.message,'err');return}
+    const r=await sb.from('songs').insert({title,artist:$('artist').value.trim()||null,theme,file_path:path,license:$('license').value,credit:$('credit').value.trim()||null});
+    $('up').disabled=false;
+    if(r.error){await sb.storage.from('songs').remove([path]);say($('umsg'),'Could not save the song: '+r.error.message,'err');return}
+    say($('umsg'),'Uploaded. It will appear in the "'+theme+'" theme.','ok');
+    $('file').value='';$('title').value='';$('artist').value='';$('credit').value='';
+    refreshSongs();
+  };
+
+  function item(main,sub,onDel){
+    const d=document.createElement('div');d.className='item';
+    const t=document.createElement('div');
+    const b=document.createElement('b');b.textContent=main;const s=document.createElement('small');s.textContent=sub;
+    t.append(b,s);
+    const x=document.createElement('button');x.className='del';x.textContent='Delete';x.onclick=()=>{if(confirm('Delete this?'))onDel()};
+    d.append(t,x);return d;
+  }
+  async function refreshSongs(){
+    const {data}=await sb.from('songs').select('*').order('created_at',{ascending:false});
+    const box=$('songs');box.textContent='';
+    if(!data||!data.length){box.textContent='No songs yet.';return}
+    data.forEach(s=>box.append(item(s.title,[s.theme,s.artist,s.license].filter(Boolean).join(' \u00b7 '),async()=>{
+      await sb.storage.from('songs').remove([s.file_path]);
+      await sb.from('songs').delete().eq('id',s.id);refreshSongs();
+    })));
+  }
+  async function refreshChat(){
+    const {data}=await sb.from('messages').select('*').order('created_at',{ascending:false}).limit(50);
+    const box=$('chat');box.textContent='';
+    if(!data||!data.length){box.textContent='No messages yet.';return}
+    data.forEach(m=>box.append(item(m.name+': '+m.text,new Date(m.created_at).toLocaleString(),async()=>{
+      await sb.from('messages').delete().eq('id',m.id);refreshChat();
+    })));
+  }
+  route();
+})();
+</script>
+</body>
+</html>

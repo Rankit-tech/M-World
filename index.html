@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>M. World</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&family=Baloo+2:wght@500;700;800&family=Space+Grotesk:wght@400;500;600&family=Hind:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#12050a;--panel:#2a0c14;--ink:#f7ecd4;--mute:#cdb59a;--accent:#d4af37;--glow:#7a1f2b;
+--display:'Baloo 2','Noto Sans Devanagari',system-ui,sans-serif;--body:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Inter','Helvetica Neue',Arial,'Noto Sans Devanagari',sans-serif}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+[data-theme=bus]{--bg:#050b17;--panel:#0d2038;--ink:#eef2f8;--mute:#9db0c8;--accent:#f0b84a;--glow:#123a6b}
+[data-theme=papa]{--bg:#140b06;--panel:#2b1a0f;--ink:#f6e8d0;--mute:#c4a888;--accent:#c9a45c;--glow:#5a3320}
+[data-theme=rap]{--bg:#0a0414;--panel:#1d0e35;--ink:#f5ecff;--mute:#b9a5da;--accent:#ff3d9a;--glow:#4b1a8c}
+[data-theme=raju]{--bg:#04140f;--panel:#0d2e23;--ink:#eaf5ec;--mute:#9fc2b0;--accent:#e0834a;--glow:#0f5a42}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.05rem/1.6 var(--body);transition:background .5s}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+header{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;justify-content:space-between;padding:1rem clamp(1rem,4vw,3rem)}
+.left{display:flex;align-items:center;gap:.4rem .9rem;flex-wrap:wrap}
+.brand{font:800 1.4rem var(--display);letter-spacing:-.01em;color:var(--ink);text-shadow:0 1px 8px rgba(0,0,0,.5)}
+.live{display:inline-flex;align-items:center;gap:.55rem;font:600 .9rem var(--body);color:#eafff1;background:rgba(18,60,38,.55);border:1px solid rgba(52,209,122,.55);border-radius:999px;padding:.35rem .9rem .35rem .7rem;white-space:nowrap}
+.live::before{content:"";flex:none;width:.8rem;height:.8rem;border-radius:50%;background:#34d17a;box-shadow:0 0 0 0 rgba(52,209,122,.6);animation:pulse 1.8s ease-out infinite}
+@keyframes pulse{to{box-shadow:0 0 0 .6rem rgba(52,209,122,0)}}
+header{flex-wrap:wrap}
+html{scroll-behavior:smooth}
+.links{display:flex;gap:.1rem;align-items:center;margin-left:auto}
+.links a,.links button{font:500 .95rem var(--body);color:#fff;background:none;border:0;padding:.45rem .7rem;cursor:pointer;text-decoration:none;border-radius:999px}
+.links a:hover,.links button:hover{background:rgba(255,255,255,.14)}
+.actions{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin-top:auto}
+.hero #chatBtn{margin-top:0}
+.pill{font:600 1rem var(--body);color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:.45rem 1.1rem;cursor:pointer}
+.pill[aria-pressed=true]{background:rgba(96,165,250,.4);border-color:#60a5fa}
+.rain{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+.menu{position:relative}
+#menuBtn{font:600 1rem var(--body);color:var(--ink);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:.45rem 1.1rem;cursor:pointer;white-space:nowrap}
+#menuBtn::after{content:"";display:inline-block;width:.45em;height:.45em;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-.15em);margin-left:.6em}
+#chatBtn{font:600 1rem var(--body);color:var(--ink);background:var(--accent);color:#1a0d08;border:0;border-radius:999px;padding:.45rem 1.1rem;cursor:pointer;white-space:nowrap}
+header{gap:.5rem}
+.menu{margin-left:0}
+.chat{position:fixed;right:clamp(.5rem,3vw,2rem);top:4.2rem;width:min(340px,calc(100vw - 1rem));height:min(62vh,460px);display:flex;flex-direction:column;border-radius:1.2rem;background:rgba(20,10,8,.9);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.22);box-shadow:0 1rem 2rem rgba(0,0,0,.45);z-index:30;overflow:hidden}
+.chat[hidden]{display:none}
+.chat h3{margin:0;padding:.7rem 1rem;font:600 1rem var(--body);display:flex;justify-content:space-between;align-items:center;gap:.6rem;border-bottom:1px solid rgba(255,255,255,.15)}
+#cclose{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;padding:0;cursor:pointer}
+.chat h3 span{margin-right:auto}
+#cname{width:8.5rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;color:var(--ink);padding:.3rem .7rem;font:500 .85rem var(--body)}
+#msgs>:first-child{margin-top:auto}
+#msgs{flex:1;overflow-y:auto;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.5rem;font-size:.95rem;overflow-wrap:anywhere}
+.m{display:flex;justify-content:flex-start;max-width:100%}
+.bub{min-width:0;max-width:90%;padding:.5rem .85rem .35rem;border-radius:1rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff}
+.bub b{display:block;font-size:.8rem;font-weight:700;margin-bottom:.1rem}
+.bub p{margin:0;font-size:1rem;line-height:1.35;max-width:none}
+.bub time{display:block;text-align:right;font-size:.65rem;color:var(--mute);margin-top:.2rem}
+.pin{padding:.55rem 1rem;font-size:.85rem;line-height:1.35;color:var(--accent);background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.12)}
+.note{color:var(--mute);font-size:.85rem}
+.cform{display:flex;align-items:center;gap:.6rem;padding:.8rem;border-top:1px solid rgba(255,255,255,.15)}
+#cin{flex:1;min-width:0;background:rgba(0,0,0,.3);border:1.5px solid var(--accent);border-radius:999px;color:#fff;padding:.8rem 1.1rem;font:500 1.05rem var(--body)}
+#cin::placeholder{color:var(--mute)}
+#csend{flex:none;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#1a0d08;border:0;display:grid;place-items:center;padding:0;cursor:pointer}
+.drop{position:absolute;right:0;top:calc(100% + .5rem);min-width:190px;padding:.4rem;border-radius:1rem;background:rgba(20,10,8,.88);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.22);box-shadow:0 1rem 2rem rgba(0,0,0,.45);z-index:20}
+.drop button{display:block;width:100%;text-align:left;font:500 1rem var(--body);color:var(--ink);background:transparent;border:0;border-radius:.7rem;padding:.65rem .9rem;cursor:pointer}
+.drop button:hover{background:rgba(255,255,255,.1)}
+.drop button[aria-pressed=true]{background:var(--accent);color:#1a0d08}
+.hero{display:flex;flex-direction:column;align-items:center;min-height:calc(100svh - 4.5rem);padding:1rem 1rem 1.2rem;text-align:center}
+.hero h1{margin-top:auto}
+.hero .radio{width:100%}
+.hint{margin:.9rem 0 0;font-size:.8rem;color:var(--mute)}
+.scene{position:fixed;inset:0;z-index:-1;background:linear-gradient(165deg,var(--glow),var(--bg) 60%,#000);background:radial-gradient(60% 50% at 18% 12%,var(--glow) 0%,transparent 70%),radial-gradient(55% 45% at 85% 92%,color-mix(in srgb,var(--accent) 24%,transparent) 0%,transparent 70%),linear-gradient(165deg,color-mix(in srgb,var(--glow) 55%,var(--bg)) 0%,var(--bg) 55%,#000 120%)}
+.scene::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.5))}
+h1{font:800 clamp(3rem,12vw,7.5rem)/1.05 var(--display);margin:0;text-wrap:balance;text-shadow:0 .04em 0 rgba(0,0,0,.45)}
+.tag{font-size:1rem;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6);margin:.8rem 0 1rem}
+.radio{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;max-width:720px;margin:0 auto;padding:.9rem 1.1rem;border-radius:1.4rem;text-align:left;background:rgba(20,10,8,.6);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border:1px solid rgba(255,255,255,.22);box-shadow:0 1rem 2.5rem rgba(0,0,0,.4)}
+.art{flex:none;width:56px;height:56px;border-radius:50%;background:linear-gradient(145deg,var(--accent),var(--glow));display:grid;place-items:center;font-size:1.7rem;border:2px solid rgba(255,255,255,.25)}
+.playing .art{animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mid{flex:1 1 220px;min-width:0}
+.mid b{display:block;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mid small{display:block;color:var(--mute);font-size:.82rem}
+.prog{display:flex;align-items:center;gap:.6rem;margin-top:.5rem;font-size:.75rem;color:var(--mute)}
+.bar{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.22);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent)}
+.ctl{display:flex;align-items:center;gap:.5rem;margin:0 auto}
+.ctl button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
+.ctl .play{width:50px;height:50px;background:var(--accent);border-color:var(--accent);color:#1a0d08}
+#talk{margin-top:1rem;font:600 .95rem var(--body);background:rgba(255,255,255,.14);color:var(--ink);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:.6rem 1.3rem;cursor:pointer;min-height:44px}
+.quote{min-height:2.4rem;margin:.8rem auto 0;max-width:640px;color:var(--ink);font:1.25rem/1.4 var(--display)}
+main section{max-width:860px;margin:0 auto;padding:2.5rem clamp(1rem,4vw,2rem)}
+h2{font:700 clamp(1.7rem,4vw,2.4rem)/1.15 var(--display);margin:0 0 1rem}
+p{max-width:68ch}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1.5rem}
+.feat div{border-left:3px solid var(--accent);padding:.2rem 0 .2rem 1rem}
+.feat b{display:block}
+details{border-bottom:1px solid var(--glow);padding:.9rem 0}
+summary{cursor:pointer;font-weight:600}
+details p{margin:.6rem 0 0;color:var(--mute)}
+footer{text-align:center;padding:2.5rem 1rem 3rem;color:var(--mute);font-size:.9rem}
+footer button{font:600 1rem var(--body);background:var(--accent);color:var(--bg);border:0;border-radius:.8rem;padding:.7rem 1.4rem;cursor:pointer;margin-bottom:1rem}
+dialog{background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:1.2rem;max-width:22rem;text-align:center}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+dialog button{font:600 1rem var(--body);background:var(--accent);color:var(--bg);border:0;border-radius:.7rem;padding:.5rem 1.2rem;cursor:pointer}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+:root{--glass:linear-gradient(145deg,rgba(255,255,255,.3),rgba(255,255,255,.08) 55%,rgba(255,255,255,.16));--glass-line:rgba(255,255,255,.42);--glass-fx:blur(28px) saturate(190%) brightness(1.05)}
+.radio,.chat,.drop,dialog{background:var(--glass),rgba(12,6,10,.38);-webkit-backdrop-filter:var(--glass-fx);backdrop-filter:var(--glass-fx);border:1px solid var(--glass-line);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(255,255,255,.1),0 20px 50px rgba(0,0,0,.4)}
+.radio{border-radius:2rem}
+.chat{border-radius:1.7rem}
+#menuBtn,.pill{background:var(--glass);border:1px solid var(--glass-line);box-shadow:inset 0 1px 0 rgba(255,255,255,.5);-webkit-backdrop-filter:var(--glass-fx);backdrop-filter:var(--glass-fx)}
+.pin{background:rgba(255,255,255,.1)}
+dialog{max-width:min(24rem,92vw);max-height:92vh;overflow:auto;padding:1.2rem}
+.dt{margin:0 0 .3rem;font:700 1.2rem var(--display)}
+.ds{margin:0 0 .9rem;font-size:.9rem;color:var(--mute)}
+.qr{display:block;width:100%;max-height:62vh;object-fit:contain;border-radius:1rem;background:#fff;margin:0 auto .9rem}
+h1{background:linear-gradient(180deg,var(--ink) 35%,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 .05em .08em rgba(0,0,0,.55))}
+.herobg{position:absolute;top:0;left:0;right:0;height:100svh;z-index:-1;background-size:cover;background-position:center;-webkit-mask-image:linear-gradient(#000 72%,transparent);mask-image:linear-gradient(#000 72%,transparent)}
+.herobg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.6))}
+h1{padding:.14em .05em .2em;line-height:1.15}
+[data-theme=raju]{--display:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Inter','Helvetica Neue',Arial,'Noto Sans Devanagari',sans-serif}
+[data-theme=raju] h1{font-weight:800;letter-spacing:-.035em}
+[data-theme=raju] h2{font-weight:700;letter-spacing:-.02em}
+[data-theme=rap]{--display:'Permanent Marker','Rubik','Baloo 2','Noto Sans Devanagari',system-ui,sans-serif}
+[data-theme=rap] h1,[data-theme=rap] h2{font-weight:400;letter-spacing:.03em}
+</style>
+</head>
+<body data-theme="salon">
+<div class="scene" id="scene"></div>
+<div class="herobg" id="herobg" hidden></div>
+<canvas class="rain" id="rain" aria-hidden="true" hidden></canvas>
+<header>
+  <div class="left"><div class="brand">M. World</div><div class="live" id="live">212 online</div></div>
+  <div class="links"><a href="#aboutus">About</a><a href="#faq">FAQ</a><button id="supportTop">Support</button></div>
+  <div class="menu"><button id="menuBtn" aria-haspopup="true" aria-expanded="false">Change Theme</button><div class="drop" id="tabs" aria-label="Stations" hidden></div></div>
+</header>
+<section class="chat" id="chat" aria-label="Live chat" hidden>
+  <h3><span>Live chat</span><input id="cname" maxlength="20" aria-label="Your name"><button id="cclose" aria-label="Close chat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button></h3>
+  <div class="pin" id="pin">📌 Welcome! Be kind, enjoy the music, and say hi.</div>
+  <div id="msgs" aria-live="polite"></div>
+  <div class="cform"><input id="cin" maxlength="200" placeholder="Write a message" aria-label="Message"><button id="csend" aria-label="Send"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button></div>
+</section>
+
+<div class="hero" id="hero">
+  <h1 id="title">सैलून</h1>
+  <div class="actions"><button id="chatBtn" aria-expanded="false">Live chat</button><button class="pill" id="rainBtn" aria-pressed="false">Rain</button></div>
+  <p class="tag" id="tag"></p>
+  <div class="radio" id="radio">
+    <div class="art" id="art" aria-hidden="true"></div>
+    <div class="mid">
+      <b id="track">–</b><small id="artist"></small>
+      <div class="prog"><span id="t1">0:00</span><div class="bar"><i id="fill"></i></div><span id="t2">3:30</span></div>
+    </div>
+    <div class="ctl">
+      <button id="prev" aria-label="Previous station"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></button>
+      <button class="play" id="play" aria-label="Play"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+      <button id="next" aria-label="Next station"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+      <button id="vol" aria-label="Mute"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4z"/></svg></button>
+    </div>
+  </div>
+  <p class="hint">Scroll for more</p>
+</div>
+
+<main>
+  <section id="aboutus">
+    <h2 id="h2"></h2>
+    <p id="about"></p>
+    <div class="feat" id="feat"></div>
+  </section>
+  <section id="faq">
+    <h2>Questions, answered</h2>
+    <details><summary>Is this radio free?</summary><p>Yes. It plays in your browser on phone or desktop, with no sign-up.</p></details>
+    <details><summary>What kind of music plays here?</summary><p>Old Hindi film songs and the sounds around them, grouped into stations by mood: the barber shop, the highway, dad's cassette shelf, the building site.</p></details>
+    <details><summary>How do I change the station?</summary><p>Tap a station name at the top, or use Prev and Next on the radio.</p></details>
+    <details><summary>What does the Rain button do?</summary><p>It starts a rainy-day effect with falling rain on the screen and the sound of a monsoon shower. Tap it again to stop.</p></details>
+    <details><summary>How can I support the radio?</summary><p>Tap Support at the top. Your support keeps the radio free.</p></details>
+  </section>
+</main>
+<footer>
+  <button id="support">Support the radio</button>
+  <p>© M. World. This is a fan-made nostalgia project. Songs belong to their artists and labels.</p>
+</footer>
+<dialog id="dlg"><p class="dt">Support the radio to keep it free</p><p class="ds">Scan with any UPI app. Every bit helps keep the music running.</p><img class="qr" alt="UPI payment QR code" src="assets/qr.png"><button id="close">Close</button></dialog>
+
+<script>
+const S=[
+{id:"salon",tab:"Salon",hi:"सैलून",tag:"A 2000s hair-cutting shop, rebuilt as a radio",h2:"The barber shop radio",
+ about:"Scissors, a battered radio in the corner, and the neighbourhood's gossip. This station plays 2000s Bollywood hits the way you heard them while waiting for a haircut.",
+ feat:["2000s Bollywood|Chartbusters from the era of CD shops and FM.","Barber chatter|One-liners from the chair beside you.","Always on|Streams until you close the tab."],
+ talk:"Hear the barber",q:["Bhaiya, thoda chhota... nahi, itna nahi!","Aaj kal ke ladke sab filmy hain.","Do minute baith jao, number aane wala hai."],
+ tracks:[["Pyaar Ki Ek Kahani","Kids' favourites, 2000s"],["Kaho Naa Pyaar Hai","Hit-parade mix"],["Dil Chahta Hai","Waiting-room mix"]]},
+{id:"bus",tab:"Bus Driver",hi:"बस ड्राइवर",tag:"Non-stop trucker radio, all night on the highway",h2:"The highway raat playlist",
+ about:"Built for long drives. Dhaba-style songs, a horn between tracks, and the highway going by outside the window.",
+ feat:["Truck wala songs|Road songs for hours on end.","Horn OK Please|Highway humour in between.","No sign-up|Plays straight from your browser."],
+ talk:"Press the horn",q:["Horn OK Please.","Agla dhaba bas das kilometre door hai.","Bharosa rakho, time se pahunchaenge."],
+ tracks:[["Raat Ka Safar","Highway night mix"],["Tum To Thehre Pardesi","Dhaba stop mix"],["Chalte Chalte","Long-haul mix"]]},
+{id:"papa",tab:"Papa Ke Gaane",hi:"पापा के गाने",tag:"The cassette shelf from dad's time",h2:"Papa's old songs, nonstop",
+ about:"Kishore Kumar, Rafi and the classics every Indian dad hums on a Sunday afternoon, with the usual fatherly commentary.",
+ feat:["Purane gaane|Golden-age film songs.","Papa ki daant|A random scolding on tap.","Free|No account, no charge."],
+ talk:"Throw the chappal",q:["Hamare zamane mein aisa nahi hota tha.","Phone rakho, gaana suno.","Padhai ho gayi? Toh gaana band."],
+ tracks:[["Mere Dil Mein Aaj Kya Hai","Kishore Kumar era"],["Pal Pal Dil Ke Paas","Sunday-afternoon mix"],["Chalte Chalte Mere Ye Geet","Classic mix"]]},
+{id:"raju",tab:"Raju Mistri",hi:"Raju Mistri",tag:"Chai, cement and cassette songs on the building site",h2:"The construction-site station",
+ about:"Hammers in the distance and a tea kettle on the boil. Upbeat folk and film numbers to work through the afternoon.",
+ feat:["Site-time songs|Upbeat numbers for the afternoon shift.","Mistri talk|Lines from the foreman.","Free|Streams in your browser."],
+ talk:"Ask the mistri",q:["Kal subah tak pakka ho jayega.","Chai pila do, kaam ho jayega.","Saaman kam pad gaya, ek bori aur mangao."],
+ tracks:[["Kaam Pe Chalo","Shift-start mix"],["Chai Ke Saath","Break-time mix"],["Shaam Ki Chhutti","Closing-time mix"]]},
+{id:"rap",tab:"Rap Session",hi:"RAP SESSION",tag:"Desi hip-hop cyphers from the nukkad, late at night",h2:"The late-night cypher",about:"Heavy bass, quick bars and a crowd on the street corner. This station is for desi rap and hip-hop, from underground cyphers to chart-toppers.",feat:["Desi hip-hop|Beats and bars in Hindi, Punjabi and Hinglish.","Cypher energy|Street-corner freestyle all night.","Free|No account needed."],tracks:[["Raat Ka Cypher","Late-night mix"],["Nukkad Se","Street cypher mix"],["Bars On Repeat","Freestyle mix"]]}
+];
+const $=id=>document.getElementById(id);
+let muted=false,cur=0,playing=false,actx=null,noise=null,lastQ=-1;
+const tabs=$('tabs');
+S.forEach((s,i)=>{const b=document.createElement('button');b.textContent=s.tab;b.onclick=()=>{tune(i);closeMenu()};tabs.append(b)});
+const mb=$('menuBtn');
+function closeMenu(){tabs.hidden=true;mb.setAttribute('aria-expanded','false')}
+mb.onclick=e=>{e.stopPropagation();const o=tabs.hidden;tabs.hidden=!o;mb.setAttribute('aria-expanded',o)};
+document.addEventListener('click',e=>{if(!tabs.contains(e.target))closeMenu()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
+const PHOTOS={salon:"assets/salon.jpg",bus:"assets/bus.jpg",papa:"assets/papa.jpg",rap:"assets/rap.jpg",raju:"assets/raju.jpg"};
+const EM={salon:'✂️',bus:'🚌',papa:'📼',raju:'🧱',rap:'🎤'};
+const PLAY='M8 5v14l11-7z',PAUSE='M6 5h4v14H6zm8 0h4v14h-4z';
+let sec=0,tm=null;
+function prog(){$('fill').style.width=(sec/210*100)+'%';$('t1').textContent=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')}
+
+function hiss(ms){
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const len=actx.sampleRate*ms/1000,buf=actx.createBuffer(1,len,actx.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len);
+    const src=actx.createBufferSource(),g=actx.createGain();g.gain.value=muted?0:.12;
+    src.buffer=buf;src.connect(g).connect(actx.destination);src.start();
+  }catch(e){}
+}
+function tune(i){
+  cur=(i+S.length)%S.length;const s=S[cur];
+  document.body.dataset.theme=s.id;
+  [...tabs.children].forEach((b,k)=>b.setAttribute('aria-pressed',k===cur));
+  $('title').textContent=s.hi;$('tag').textContent=s.tag;$('h2').textContent=s.h2;$('about').textContent=s.about;
+  $('feat').innerHTML=s.feat.map(f=>{const[a,b]=f.split('|');return`<div><b>${a}</b>${b}</div>`}).join('');
+  
+  $('art').textContent=EM[s.id];{const nr=s.id==='rap';$('rainBtn').hidden=nr;if(nr&&rainOn)setRain(false)}{const hb=$('herobg');if(PHOTOS[s.id]){hb.style.backgroundImage='url("'+PHOTOS[s.id]+'")';hb.hidden=false}else hb.hidden=true}sec=0;prog();
+  const t=s.tracks[0];$('track').textContent=t[0];$('artist').textContent=t[1];
+  document.title=s.tab+" | M. World";
+  if(playing)hiss(350);
+}
+$('prev').onclick=()=>tune(cur-1);
+$('next').onclick=()=>tune(cur+1);
+$('play').onclick=()=>{
+  playing=!playing;
+  $('play').querySelector('path').setAttribute('d',playing?PAUSE:PLAY);
+  $('play').setAttribute('aria-label',playing?'Pause':'Play');
+  $('radio').classList.toggle('playing',playing);
+  clearInterval(tm);
+  if(playing){hiss(500);tm=setInterval(()=>{sec=(sec+1)%211;prog()},1000)}
+};
+$('vol').onclick=()=>{muted=!muted;$('vol').querySelector('path').setAttribute('d',muted?'M3 9v6h4l5 5V4L7 9H3zm13.6.4 1.4-1.4 2 2 2-2 1.4 1.4-2 2 2 2-1.4 1.4-2-2-2 2-1.4-1.4 2-2z':'M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4z');$('vol').setAttribute('aria-label',muted?'Unmute':'Mute');if(rainNodes)rainNodes.g.gain.value=muted?0:RAIN_VOL};
+$('support').onclick=()=>$('dlg').showModal();
+$('close').onclick=()=>$('dlg').close();
+
+function ac(){actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();return actx}
+const cv=$('rain'),cx=cv.getContext('2d');
+let drops=[],rainOn=false,raf=0,rainNodes=null;
+function sizeRain(){cv.width=innerWidth;cv.height=innerHeight}
+function mk(){return{x:Math.random()*(cv.width+200),y:Math.random()*cv.height,l:12+Math.random()*18,v:14+Math.random()*10}}
+function frame(){
+  cx.clearRect(0,0,cv.width,cv.height);cx.strokeStyle='rgba(200,220,255,.45)';cx.lineWidth=1.2;cx.beginPath();
+  for(const d of drops){cx.moveTo(d.x,d.y);cx.lineTo(d.x-d.l*.25,d.y+d.l);d.y+=d.v;d.x-=d.v*.25;if(d.y>cv.height||d.x<-20){d.y=-20;d.x=Math.random()*(cv.width+200)}}
+  cx.stroke();raf=requestAnimationFrame(frame);
+}
+const RAIN_VOL=.16;
+function pinkBuf(a,sec,ch){const len=Math.floor(a.sampleRate*sec),buf=a.createBuffer(ch,len,a.sampleRate);for(let c=0;c<ch;c++){const d=buf.getChannelData(c);let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8665*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}}return buf}
+function brownBuf(a,sec){const len=Math.floor(a.sampleRate*sec),buf=a.createBuffer(1,len,a.sampleRate),d=buf.getChannelData(0);let l=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;l=(l+.02*w)/1.02;d[i]=l*3.5}return buf}
+function loopSrc(a,buf){const s=a.createBufferSource();s.buffer=buf;s.loop=true;return s}
+function rainSound(){
+  const a=ac(),master=a.createGain();master.gain.value=muted?0:RAIN_VOL;master.connect(a.destination);
+  const pb=pinkBuf(a,4,2),bed=loopSrc(a,pb),hp=a.createBiquadFilter(),lp=a.createBiquadFilter(),bg=a.createGain();
+  hp.type='highpass';hp.frequency.value=380;lp.type='lowpass';lp.frequency.value=7500;bg.gain.value=.55;
+  bed.connect(hp).connect(lp).connect(bg).connect(master);bed.start();
+  const rum=loopSrc(a,brownBuf(a,4)),rl=a.createBiquadFilter(),rg=a.createGain();
+  rl.type='lowpass';rl.frequency.value=220;rg.gain.value=.5;rum.connect(rl).connect(rg).connect(master);rum.start();
+  const n={srcs:[bed,rum],g:master,buf:pb,t:0,mod:0};
+  function drop(){
+    if(rainNodes!==n)return;
+    const big=Math.random()<.12,t=a.currentTime,src=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();
+    src.buffer=pb;f.type='bandpass';f.frequency.value=big?600+Math.random()*700:1500+Math.random()*4500;f.Q.value=big?6+Math.random()*6:2+Math.random()*6;
+    const v=big?.5+Math.random()*.4:.12+Math.random()*.4,dec=big?.1+Math.random()*.08:.025+Math.random()*.05;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.002);g.gain.exponentialRampToValueAtTime(.001,t+dec);
+    if(a.createStereoPanner){const pn=a.createStereoPanner();pn.pan.value=Math.random()*2-1;src.connect(f).connect(g).connect(pn).connect(master)}else src.connect(f).connect(g).connect(master);
+    src.start(t,Math.random()*3,.15);
+    n.t=setTimeout(drop,15+Math.random()*80);
+  }
+  n.mod=setInterval(()=>{const t=a.currentTime;bg.gain.setTargetAtTime(.42+Math.random()*.25,t,1.5);rg.gain.setTargetAtTime(.35+Math.random()*.3,t,2)},3000);
+  rainNodes=n;drop();
+}
+function stopRainSound(){
+  const n=rainNodes;if(!n)return;rainNodes=null;clearTimeout(n.t);clearInterval(n.mod);
+  n.g.gain.setTargetAtTime(0,actx.currentTime,.15);
+  setTimeout(()=>{n.srcs.forEach(x=>{try{x.stop()}catch(e){}});n.g.disconnect()},700);
+}
+function setRain(on){
+  rainOn=on;$('rainBtn').setAttribute('aria-pressed',on);$('rainBtn').textContent=on?'Rain on':'Rain';
+  if(on){sizeRain();drops=Array.from({length:Math.min(220,Math.floor(innerWidth/6))},mk);cv.hidden=false;frame();try{rainSound()}catch(e){}}
+  else{cancelAnimationFrame(raf);cx.clearRect(0,0,cv.width,cv.height);cv.hidden=true;stopRainSound()}
+}
+$('rainBtn').onclick=()=>setRain(!rainOn);
+addEventListener('resize',()=>{if(rainOn)sizeRain()});
+$('supportTop').onclick=()=>$('dlg').showModal();
+let room=null;
+const msgs=$('msgs'),cin=$('cin');
+$('cname').value='Guest'+Math.floor(100+Math.random()*900);
+function addNode(d){msgs.append(d);msgs.scrollTop=msgs.scrollHeight;while(msgs.children.length>100)msgs.firstChild.remove()}
+function note(t){const d=document.createElement('div');d.className='note';d.textContent=t;addNode(d)}
+const COL=['#a3e635','#60a5fa','#fb923c','#f472b6','#22d3ee','#facc15','#c084fc','#34d399'];
+function nameColor(n){let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))>>>0;return COL[h%COL.length]}
+function addMsg(n,t,me,ts){const d=document.createElement('div');d.className='m'+(me?' me':'');const bub=document.createElement('div');bub.className='bub';const b=document.createElement('b');b.textContent=n;b.style.color=nameColor(n);const p=document.createElement('p');p.textContent=t;const tm=document.createElement('time');tm.textContent=new Date(ts||Date.now()).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}).toLowerCase();bub.append(b,p,tm);d.append(bub);addNode(d)}
+note('Say hi to everyone online right now.');
+$('chatBtn').onclick=()=>{const c=$('chat');c.hidden=!c.hidden;$('chatBtn').setAttribute('aria-expanded',!c.hidden);if(!c.hidden)cin.focus()};
+function closeChat(){$('chat').hidden=true;$('chatBtn').setAttribute('aria-expanded','false')}
+$('cclose').onclick=closeChat;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeChat()});
+document.addEventListener('click',e=>{const c=$('chat');if(!c.hidden&&!c.contains(e.target)&&!$('chatBtn').contains(e.target))closeChat()});
+let last=0;
+function send(){
+  const t=cin.value.trim();if(!t)return;
+  if(!room){note('Live chat is not connected in this view.');return}
+  if(Date.now()-last<1000)return;last=Date.now();
+  room.emit('chat',{n:($('cname').value.trim()||'Guest').slice(0,20),t:t.slice(0,200)})
+    .then(()=>{cin.value=''})
+    .catch(e=>note(e&&e.code==='not_permitted'?'With your access level you can read the chat but not send.':'Message not sent. Try again.'));
+}
+$('csend').onclick=send;
+cin.addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+if(window.claude&&claude.use){
+  claude.use('user').then(async u=>{
+    if(!u)return;
+    if(await u.isOwner()){
+      $('cname').value='Admin';
+      let id=null;try{id=await u.id()}catch(e){}
+      note(id?'You are the admin. Your ID: '+id:'You are the admin.');
+    }
+  }).catch(()=>{});
+}
+const fake=setInterval(()=>{$('live').textContent=(200+Math.floor(Math.random()*60))+' online'},7000);
+if(window.claude&&claude.use){
+  claude.use('room').then(r=>{
+    if(!r)return;room=r;clearInterval(fake);
+    r.on('chat',m=>{const d=m.data||{};addMsg(String(d.n||'Guest').slice(0,20),String(d.t||'').slice(0,200),m.isMe)});
+    r.onPeers(c=>{$('live').textContent=c.peers.filter(x=>x.kind==='viewer').length+' online'});
+  }).catch(()=>{});
+}
+tune(0);
+</script>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="backend.js"></script>
+</body>
+</html>
