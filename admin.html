@@ -29,6 +29,13 @@ button:disabled{opacity:.5;cursor:default}
 .item small{display:block;color:var(--mute)}
 .item div{min-width:0;overflow-wrap:anywhere}
 .bar{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+.hint{margin:0 0 .8rem;color:var(--mute);font-size:.9rem}
+.grp{margin:1rem 0 .3rem;font-weight:700;color:var(--accent)}
+.song{border-top:1px solid var(--line);padding:.7rem 0}
+.song .r{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
+.song .acts{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.song audio{height:34px;max-width:100%}
+@media(max-width:560px){.song .r{grid-template-columns:1fr}}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -51,15 +58,15 @@ button:disabled{opacity:.5;cursor:default}
 
   <div id="panel" hidden>
     <section class="card">
-      <h2>Upload a song</h2>
-      <label for="file">Audio file (mp3, m4a, ogg or wav, up to 15 MB)</label>
-      <input id="file" type="file" accept="audio/*">
+      <h2>Upload songs</h2>
+      <label for="file">Audio files (mp3, m4a, ogg or wav, up to 15 MB each). You can pick many at once.</label>
+      <input id="file" type="file" accept="audio/*" multiple>
       <div class="row">
-        <div><label for="title">Title</label><input id="title" maxlength="120"></div>
+        <div><label for="title">Title (only when you pick one file; otherwise the file name is used)</label><input id="title" maxlength="120"></div>
         <div><label for="artist">Artist</label><input id="artist" maxlength="120"></div>
       </div>
       <div class="row">
-        <div><label for="theme">Theme</label>
+        <div><label for="theme">Which theme will play these songs?</label>
           <select id="theme">
             <option value="salon">Salon</option>
             <option value="bus">Bus Driver</option>
@@ -82,7 +89,8 @@ button:disabled{opacity:.5;cursor:default}
     </section>
 
     <section class="card">
-      <h2>Songs</h2>
+      <h2>Songs by theme</h2>
+      <p class="hint">Change the theme dropdown on any song and press Save to move it to another theme. Songs play in the order they were added.</p>
       <div id="songs"></div>
     </section>
 
@@ -122,21 +130,31 @@ button:disabled{opacity:.5;cursor:default}
 
   const safe=n=>n.toLowerCase().replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(-60)||'song';
 
+  const THEMES={salon:'Salon',bus:'Bus Driver',papa:'Papa Ke Gaane',raju:'Raju Mistri',rap:'Rap Session'};
+  const nice=n=>n.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim().slice(0,120)||'Untitled';
+
   $('up').onclick=async()=>{
-    const f=$('file').files[0],title=$('title').value.trim();
-    if(!f){say($('umsg'),'Choose an audio file first.','err');return}
-    if(!f.type.startsWith('audio/')){say($('umsg'),'That file is not audio.','err');return}
-    if(f.size>15*1024*1024){say($('umsg'),'File is bigger than 15 MB. Convert it to 128 kbps mp3 first.','err');return}
-    if(!title){say($('umsg'),'Add a title.','err');return}
-    const theme=$('theme').value,path=theme+'/'+Date.now()+'-'+safe(f.name);
-    $('up').disabled=true;say($('umsg'),'Uploading...');
-    const u=await sb.storage.from('songs').upload(path,f,{contentType:f.type,upsert:false});
-    if(u.error){$('up').disabled=false;say($('umsg'),'Upload failed: '+u.error.message,'err');return}
-    const r=await sb.from('songs').insert({title,artist:$('artist').value.trim()||null,theme,file_path:path,license:$('license').value,credit:$('credit').value.trim()||null});
+    const files=[...$('file').files];
+    if(!files.length){say($('umsg'),'Choose at least one audio file.','err');return}
+    for(const f of files){
+      if(!f.type.startsWith('audio/')){say($('umsg'),f.name+' is not an audio file.','err');return}
+      if(f.size>15*1024*1024){say($('umsg'),f.name+' is bigger than 15 MB. Convert it to 128 kbps mp3 first.','err');return}
+    }
+    const theme=$('theme').value,single=files.length===1&&$('title').value.trim();
+    $('up').disabled=true;let done=0,fail=[];
+    for(const f of files){
+      say($('umsg'),'Uploading '+(done+fail.length+1)+' of '+files.length+'...');
+      const path=theme+'/'+Date.now()+'-'+safe(f.name);
+      const u=await sb.storage.from('songs').upload(path,f,{contentType:f.type,upsert:false});
+      if(u.error){fail.push(f.name+': '+u.error.message);continue}
+      const r=await sb.from('songs').insert({title:single||nice(f.name),artist:$('artist').value.trim()||null,theme,file_path:path,license:$('license').value,credit:$('credit').value.trim()||null});
+      if(r.error){await sb.storage.from('songs').remove([path]);fail.push(f.name+': '+r.error.message);continue}
+      done++;
+    }
     $('up').disabled=false;
-    if(r.error){await sb.storage.from('songs').remove([path]);say($('umsg'),'Could not save the song: '+r.error.message,'err');return}
-    say($('umsg'),'Uploaded. It will appear in the "'+theme+'" theme.','ok');
-    $('file').value='';$('title').value='';$('artist').value='';$('credit').value='';
+    if(fail.length)say($('umsg'),done+' uploaded. Failed: '+fail.join('; '),'err');
+    else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'".','ok');
+    $('file').value='';$('title').value='';
     refreshSongs();
   };
 
@@ -148,14 +166,44 @@ button:disabled{opacity:.5;cursor:default}
     const x=document.createElement('button');x.className='del';x.textContent='Delete';x.onclick=()=>{if(confirm('Delete this?'))onDel()};
     d.append(t,x);return d;
   }
+  function songRow(s){
+    const d=document.createElement('div');d.className='song';
+    const r=document.createElement('div');r.className='r';
+    const ti=document.createElement('input');ti.value=s.title;ti.maxLength=120;ti.setAttribute('aria-label','Title');
+    const ar=document.createElement('input');ar.value=s.artist||'';ar.maxLength=120;ar.placeholder='Artist';ar.setAttribute('aria-label','Artist');
+    r.append(ti,ar);
+    const acts=document.createElement('div');acts.className='acts';
+    const th=document.createElement('select');th.setAttribute('aria-label','Theme');
+    Object.entries(THEMES).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v;if(k===s.theme)o.selected=true;th.append(o)});
+    const save=document.createElement('button');save.textContent='Save';
+    const del=document.createElement('button');del.className='del';del.textContent='Delete';
+    const au=document.createElement('audio');au.controls=true;au.preload='none';au.src=sb.storage.from('songs').getPublicUrl(s.file_path).data.publicUrl;
+    const st=document.createElement('span');st.className='msg';st.style.margin='0';
+    save.onclick=async()=>{
+      const t=ti.value.trim();if(!t){st.textContent='Title cannot be empty.';st.className='msg err';return}
+      save.disabled=true;
+      const {error}=await sb.from('songs').update({title:t,artist:ar.value.trim()||null,theme:th.value}).eq('id',s.id);
+      save.disabled=false;
+      if(error){st.textContent='Could not save.';st.className='msg err';return}
+      if(th.value!==s.theme){refreshSongs();return}
+      st.textContent='Saved.';st.className='msg ok';
+    };
+    del.onclick=async()=>{if(!confirm('Delete this song?'))return;
+      await sb.storage.from('songs').remove([s.file_path]);
+      await sb.from('songs').delete().eq('id',s.id);refreshSongs()};
+    acts.append(th,save,del,st);
+    d.append(r,acts,au);return d;
+  }
   async function refreshSongs(){
-    const {data}=await sb.from('songs').select('*').order('created_at',{ascending:false});
+    const {data}=await sb.from('songs').select('*').order('created_at',{ascending:true});
     const box=$('songs');box.textContent='';
     if(!data||!data.length){box.textContent='No songs yet.';return}
-    data.forEach(s=>box.append(item(s.title,[s.theme,s.artist,s.license].filter(Boolean).join(' \u00b7 '),async()=>{
-      await sb.storage.from('songs').remove([s.file_path]);
-      await sb.from('songs').delete().eq('id',s.id);refreshSongs();
-    })));
+    Object.keys(THEMES).forEach(k=>{
+      const list=data.filter(s=>s.theme===k);
+      const h=document.createElement('div');h.className='grp';h.textContent=THEMES[k]+' ('+list.length+')';box.append(h);
+      if(!list.length){const e=document.createElement('div');e.className='hint';e.textContent='No songs. This theme shows "No songs yet".';box.append(e)}
+      list.forEach(s=>box.append(songRow(s)));
+    });
   }
   async function refreshChat(){
     const {data}=await sb.from('messages').select('*').order('created_at',{ascending:false}).limit(50);
