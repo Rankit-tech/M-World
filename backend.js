@@ -141,7 +141,11 @@
     if (Date.now() - last < 1500) return; last = Date.now();
     const { error } = await sb.from('messages').insert({ text: t.slice(0, 200), secret });
     if (!error) { cin.value = ''; return; }
-    note(/slow down/.test(error.message || '') ? 'Slow down a little.' : 'Message not sent. Try again in a moment.');
+    console.error('chat insert failed', error);
+    const m = error.message || '';
+    if (/slow down/.test(m)) note('Slow down a little.');
+    else if (/secret|missing id|identity/.test(m) || error.code === '42703' || error.code === 'PGRST204') note('Chat setup is incomplete: run supabase/update-v2.sql in Supabase. (' + m + ')');
+    else note('Message not sent: ' + m);
   };
   $('csend').onclick = send;
 
