@@ -151,3 +151,6 @@ begin
 end $$;
 revoke all on function public.admin_stats(int) from public;
 grant execute on function public.admin_stats(int) to authenticated;
+
+-- 5) Tell the API to pick up the new columns and functions right away
+notify pgrst, 'reload schema';
