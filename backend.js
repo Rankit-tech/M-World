@@ -14,7 +14,8 @@
 
   /* ---------- Songs ---------- */
   const audio = new Audio();
-  audio.preload = 'none';
+  audio.preload = 'auto';
+  audio.setAttribute('playsinline', '');
   let songs = [], idx = 0, on = false;
 
   const fmt = s => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
@@ -36,9 +37,31 @@
     audio.src = urlOf(songs[idx].file_path);
     show();
     $('fill').style.width = '0%'; $('t1').textContent = '0:00'; $('t2').textContent = '0:00';
-    if (autoplay) {
-      audio.play().then(() => { on = true; setIcon(true); }).catch(() => { on = false; setIcon(false); });
-    }
+    if (autoplay) tryPlay(0);
+    updateSession();
+  }
+  // Phones are strict: if play() is refused right after a track change, retry once the new track is ready.
+  function tryPlay(n) {
+    const want = idx;
+    audio.play().then(() => { on = true; setIcon(true); }).catch(() => {
+      if (n < 2 && want === idx) {
+        const retry = () => { audio.removeEventListener('canplay', retry); if (want === idx) tryPlay(n + 1); };
+        audio.addEventListener('canplay', retry);
+        setTimeout(() => audio.removeEventListener('canplay', retry), 8000);
+      } else { on = false; setIcon(false); $('artist').textContent = 'Tap play to continue'; }
+    });
+  }
+  // Lock-screen / notification controls keep playback alive when the phone screen is off.
+  function updateSession() {
+    if (!('mediaSession' in navigator) || !songs[idx] || !window.MediaMetadata) return;
+    try { navigator.mediaSession.metadata = new MediaMetadata({ title: songs[idx].title, artist: songs[idx].artist || 'M. World' }); } catch (e) {}
+  }
+  if ('mediaSession' in navigator) {
+    const h = (a, f) => { try { navigator.mediaSession.setActionHandler(a, f); } catch (e) {} };
+    h('play', () => { audio.play().then(() => { on = true; setIcon(true); }).catch(() => {}); });
+    h('pause', () => { audio.pause(); on = false; setIcon(false); });
+    h('nexttrack', () => { if (songs.length) load(idx + 1, true); });
+    h('previoustrack', () => { if (songs.length) load(idx - 1, true); });
   }
   async function loadTheme() {
     on = false; audio.pause(); audio.removeAttribute('src'); setIcon(false);
