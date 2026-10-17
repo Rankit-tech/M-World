@@ -160,7 +160,7 @@ dialog h2{margin-top:0}
 
     <!-- Songs -->
     <section class="card" data-pane="songs" role="tabpanel" hidden>
-      <h2>Songs</h2>
+      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v5</small></h2>
       <p class="hint">Songs are ranked by listeners: the most listened song is #1 and plays first on the site. A listen counts when someone stays for 20 seconds, and a full play counts double. New songs start at the bottom and move up as people listen. Use the three dots on a song to move it to any position (#1, #2...), edit or delete it. A moved song stays pinned there until you unpin it.</p>
       <div class="msg err" id="rankwarn" hidden>Ranking is not set up yet. Run supabase/update-v2.sql in the Supabase SQL Editor.</div>
       <div class="chips" id="chips" role="group" aria-label="Filter by theme"></div>
@@ -223,6 +223,7 @@ dialog h2{margin-top:0}
   const SVG={
     dots:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>',
     play:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
+    img:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-8 9"/></svg>',
     stop:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>'
   };
   function iconBtn(kind,label){const b=document.createElement('button');b.type='button';b.className='ib';b.setAttribute('aria-label',label);b.innerHTML=SVG[kind];return b}
@@ -479,7 +480,8 @@ dialog h2{margin-top:0}
       {label:'Edit title, artist, theme',fn:()=>openEdit(s)},
       {label:'Delete song',danger:true,fn:()=>deleteSong(s)}
     ]);
-    d.append(rk,sm,pb,db);return d;
+    const wb=iconBtn('img',s.wallpaper_path?'Change wallpaper of this song':'Set wallpaper for this song');wb.title=wb.getAttribute('aria-label');if(s.wallpaper_path)wb.style.borderColor='var(--accent)';wb.onclick=()=>pickSongWall(s);
+    d.append(rk,sm,pb,wb,db);return d;
   }
   function renderSongs(){
     renderChips();
