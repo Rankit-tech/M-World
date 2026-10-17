@@ -59,3 +59,6 @@ GitHub Pages on karo: Settings > Pages > Deploy from a branch > `main` / root.
 
 ## Update v4: wallpapers + Assistant
 `supabase/update-v4.sql` ko SQL Editor mein ek baar run karo. Phir admin mein **Wallpapers** tab se har theme ki background photo badal sakte ho, aur **Assistant** tab gaano ke numbers padhkar batata hai kaun sa gaana popular hai, kaun skip hota hai, aur Auto-pilot se saare pins hata deta hai.
+
+## Update v5: har song ka apna wallpaper
+`supabase/update-v5.sql` ko SQL Editor mein ek baar run karo (update-v4.sql ke baad). Admin ke Songs tab mein song ke ⋮ menu se "Set wallpaper for this song" chuno. Wo gaana bajne par uski photo background mein dikhti hai, warna theme ki photo.

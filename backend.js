@@ -29,6 +29,14 @@
     const s = songs[idx]; if (!s) return;
     $('track').textContent = s.title;
     $('artist').textContent = [s.artist, s.credit].filter(Boolean).join(' \u00b7 ');
+    applyBg();
+  }
+  // Each song can have its own wallpaper; otherwise the theme photo is shown.
+  function applyBg() {
+    const s = songs[idx], hb = $('herobg');
+    let url = PHOTOS[S[cur].id];
+    if (s && s.wallpaper_path) url = sb.storage.from('wallpapers').getPublicUrl(s.wallpaper_path).data.publicUrl;
+    if (url) { hb.style.backgroundImage = 'url("' + url + '")'; hb.hidden = false; } else hb.hidden = true;
   }
   let listened = 0, lastT = null, gotListen = false, gotDone = false;
   function load(i, autoplay) {
@@ -197,8 +205,7 @@
         const u = sb.storage.from('wallpapers').getPublicUrl(w.file_path).data.publicUrl;
         PHOTOS[w.theme] = u + '?v=' + encodeURIComponent(w.updated_at);
       });
-      const id = S[cur].id, hb = $('herobg');
-      if (PHOTOS[id]) { hb.style.backgroundImage = 'url("' + PHOTOS[id] + '")'; hb.hidden = false; }
+      applyBg();
     } catch (e) {}
   })();
 

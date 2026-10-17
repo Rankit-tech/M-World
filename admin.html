@@ -464,7 +464,7 @@ dialog h2{margin-top:0}
     const sm=document.createElement('div');sm.className='sm';
     const b=document.createElement('b');b.textContent=s.title;
     const sub=document.createElement('small');
-    sub.textContent=[s.artist,s.pin_rank!=null?'pinned':null,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
+    sub.textContent=[s.artist,s.pin_rank!=null?'pinned':null,s.wallpaper_path?'has wallpaper':null,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
     sm.append(b,sub);
     const pb=iconBtn('play','Preview');pb.onclick=()=>preview(s,pb);
     const db=iconBtn('dots','More options for '+s.title);
@@ -474,6 +474,8 @@ dialog h2{margin-top:0}
       {label:'Make #1',fn:()=>moveSong(s,1)},
       {label:'Move to position\u2026',fn:()=>{const v=prompt('New position in '+(THEMES[s.theme]||s.theme)+' (1 = top):',s.rank);if(v!==null)moveSong(s,parseInt(v,10))}},
       ...(s.pin_rank!=null?[{label:'Unpin (back to automatic rank)',fn:()=>unpinSong(s)}]:[]),
+      {label:s.wallpaper_path?'Change wallpaper of this song':'Set wallpaper for this song',fn:()=>pickSongWall(s)},
+      ...(s.wallpaper_path?[{label:'Remove song wallpaper',fn:()=>removeSongWall(s)}]:[]),
       {label:'Edit title, artist, theme',fn:()=>openEdit(s)},
       {label:'Delete song',danger:true,fn:()=>deleteSong(s)}
     ]);
@@ -511,10 +513,34 @@ dialog h2{margin-top:0}
     if(error)alert('Could not unpin: '+error.message);
     refreshSongs();
   }
+  const wallPick=document.createElement('input');wallPick.type='file';wallPick.accept='image/jpeg,image/png,image/webp';wallPick.hidden=true;document.body.append(wallPick);
+  let wallFor=null;
+  function pickSongWall(s){wallFor=s;wallPick.value='';wallPick.click()}
+  wallPick.onchange=async()=>{
+    const s=wallFor,f=wallPick.files[0];if(!s||!f)return;
+    if(!f.type.startsWith('image/')){alert('Please choose an image.');return}
+    try{
+      const blob=await shrink(f);
+      const path='songs/'+s.id+'-'+Date.now()+'.jpg';
+      const u=await sb.storage.from('wallpapers').upload(path,blob,{contentType:'image/jpeg',upsert:false});
+      if(u.error)throw u.error;
+      const r=await sb.from('songs').update({wallpaper_path:path}).eq('id',s.id);
+      if(r.error){await sb.storage.from('wallpapers').remove([path]);throw r.error}
+      if(s.wallpaper_path)await sb.storage.from('wallpapers').remove([s.wallpaper_path]);
+    }catch(e){alert(/wallpaper_path/.test(e.message||'')?'Run supabase/update-v5.sql in the Supabase SQL Editor first.':/bucket|not found/i.test(e.message||'')?'Run supabase/update-v4.sql first.':'Could not set wallpaper: '+(e.message||e))}
+    refreshSongs();
+  };
+  async function removeSongWall(s){
+    const r=await sb.from('songs').update({wallpaper_path:null}).eq('id',s.id);
+    if(r.error){alert('Could not remove: '+r.error.message);return}
+    if(s.wallpaper_path)await sb.storage.from('wallpapers').remove([s.wallpaper_path]);
+    refreshSongs();
+  }
   async function deleteSong(s){
     if(!confirm('Delete "'+s.title+'"? This cannot be undone.'))return;
     if(pvId===s.id)stopPreview();
     await sb.storage.from('songs').remove([s.file_path]);
+    if(s.wallpaper_path)await sb.storage.from('wallpapers').remove([s.wallpaper_path]);
     const {error}=await sb.from('songs').delete().eq('id',s.id);
     if(error)alert('Could not delete: '+error.message);
     refreshSongs();
