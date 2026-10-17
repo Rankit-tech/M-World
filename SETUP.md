@@ -62,3 +62,6 @@ GitHub Pages on karo: Settings > Pages > Deploy from a branch > `main` / root.
 
 ## Update v5: har song ka apna wallpaper
 `supabase/update-v5.sql` ko SQL Editor mein ek baar run karo (update-v4.sql ke baad). Admin ke Songs tab mein song ke ⋮ menu se "Set wallpaper for this song" chuno. Wo gaana bajne par uski photo background mein dikhti hai, warna theme ki photo.
+
+## Update v6: trending (public chart) auto-boost
+`supabase/update-v6.sql` ko SQL Editor mein ek baar run karo (update-v5.sql ke baad). Admin ke Assistant tab mein "Check trending now" Apple Music India ka top-100 chart padhta hai aur tumhare matching gaano ko unki theme mein upar laata hai. "Auto" tick ho to admin page kholne par har 12 ghante mein khud chalta hai. Manual pin hamesha upar rehta hai.

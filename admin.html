@@ -162,7 +162,7 @@ dialog h2{margin-top:0}
 
     <!-- Songs -->
     <section class="card" data-pane="songs" role="tabpanel" hidden>
-      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v6</small></h2>
+      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v7</small></h2>
       <p class="hint">Songs are ranked by listeners: the most listened song is #1 and plays first on the site. A listen counts when someone stays for 20 seconds, and a full play counts double. New songs start at the bottom and move up as people listen. Use the three dots on a song to move it to any position (#1, #2...), edit or delete it. A moved song stays pinned there until you unpin it.</p>
       <div class="msg err" id="rankwarn" hidden>Ranking is not set up yet. Run supabase/update-v2.sql in the Supabase SQL Editor.</div>
       <div class="chips" id="chips" role="group" aria-label="Filter by theme"></div>
@@ -181,6 +181,13 @@ dialog h2{margin-top:0}
     <section class="card" data-pane="ai" role="tabpanel" hidden>
       <div class="bar" style="padding:0 0 .6rem"><h2 style="margin:0">Assistant</h2><button class="ghost" id="airefresh">Check again</button></div>
       <p class="hint">The assistant reads your listening numbers and tells you which songs are popular, which ones people skip, and what to do next. It is a built-in rule-based helper, not an online AI service, so it costs nothing and needs no key.</p>
+      <h3 style="margin:.2rem 0 .3rem">Trending on public charts</h3>
+      <p class="hint">Reads the public Apple Music India "Most played" chart (top 100) and matches it with your song titles and artists. Matching songs rise to the top of their theme, best chart position first. Songs you pinned by hand stay above them. Your own royalty-free songs will not be on a chart, so they only move by listeners.</p>
+      <label style="display:flex;gap:.6rem;align-items:center;margin:.2rem 0 .6rem"><input type="checkbox" id="autotrend" style="width:auto"> Auto: check and apply when I open this admin page (once every 12 hours)</label>
+      <div class="row" style="margin-bottom:.6rem"><button id="trendnow">Check trending now</button></div>
+      <div class="msg" id="trendmsg"></div>
+      <div id="trendout" style="margin-bottom:1rem"></div>
+      <h3 style="margin:.2rem 0 .3rem">Tips</h3>
       <div class="row" style="margin-bottom:.8rem">
         <button id="autopilot">Auto-pilot: let listeners decide the order</button>
       </div>
@@ -303,6 +310,7 @@ dialog h2{margin-top:0}
     if(!ok){$('login').hidden=false;$('panel').hidden=true;$('out').hidden=false;say($('lmsg'),'This account is not an admin.','err');return}
     $('login').hidden=true;$('panel').hidden=false;$('out').hidden=false;
     startLive();
+    autoTrend();
     let t='dash';try{t=sessionStorage.getItem('mw_tab')||'dash'}catch(e){}
     showTab(t);
   }
@@ -437,6 +445,61 @@ dialog h2{margin-top:0}
     tips.forEach(t=>{const d=document.createElement('div');d.className='tip '+t.cls;const b=document.createElement('b');b.textContent=t.h;d.append(b,document.createTextNode(t.t));out.append(d)});
   }
   $('airefresh').onclick=runAssistant;
+
+  /* ---------- trending from public charts ---------- */
+  const CHARTS=['https://rss.marketingtools.apple.com/api/v2/in/music/most-played/100/songs.json','https://rss.applemarketingtools.com/api/v2/in/music/most-played/100/songs.json'];
+  const core=t=>String(t||'').toLowerCase().replace(/\([^)]*\)|\[[^\]]*\]/g,' ').replace(/\s[-\u2013\u2014]\s.*$/,' ').replace(/\b(feat|ft)\b.*$/,' ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+  const toks=t=>String(t||'').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(x=>x.length>=3&&!['feat','and','the'].includes(x));
+  function matchSong(song,c){
+    const st=core(song.title),ct=core(c.name);
+    if(!st||!ct)return false;
+    const eq=st===ct;
+    const sh=st.length<ct.length?st:ct,lg=st.length<ct.length?ct:st;
+    const part=sh.length>=6&&(lg.includes(sh))&&sh.length/lg.length>=.6;
+    if(!eq&&!part)return false;
+    if(!song.artist)return true;
+    const a=new Set(toks(song.artist));
+    return toks(c.artistName).some(x=>a.has(x));
+  }
+  async function fetchChart(){
+    let last=null;
+    for(const u of CHARTS){
+      try{const res=await fetch(u,{cache:'no-store'});if(!res.ok)throw new Error('HTTP '+res.status);const j=await res.json();const rs=j&&j.feed&&j.feed.results;if(Array.isArray(rs)&&rs.length)return rs}catch(e){last=e}
+    }
+    throw last||new Error('chart not available');
+  }
+  async function runTrending(auto){
+    const msg=$('trendmsg'),out=$('trendout');
+    if(!auto){out.textContent='';say(msg,'Reading the chart...')}
+    try{
+      const chart=await fetchChart();
+      const r=await sb.rpc('ranked_songs',{p_theme:null});
+      if(r.error||!Array.isArray(r.data))throw new Error('Run supabase/update-v2.sql to update-v6.sql first.');
+      const songs=r.data,ups=[],hits=[];
+      songs.forEach(sg=>{
+        let pos=null;
+        for(let i=0;i<chart.length;i++){if(matchSong(sg,chart[i])){pos=i+1;break}}
+        if(pos)hits.push({sg,pos,c:chart[pos-1]});
+        if((sg.trend_rank||null)!==pos)ups.push(sb.from('songs').update({trend_rank:pos}).eq('id',sg.id));
+      });
+      const res=await Promise.all(ups);
+      const bad=res.find(x=>x.error);
+      if(bad)throw new Error(/trend_rank/.test(bad.error.message)?'Run supabase/update-v6.sql in the Supabase SQL Editor first.':bad.error.message);
+      try{localStorage.setItem('mw_trend_at',String(Date.now()))}catch(e){}
+      out.textContent='';
+      hits.sort((a,b)=>a.pos-b.pos).forEach(h=>{const d=document.createElement('div');d.className='tip good';const b=document.createElement('b');b.textContent='#'+h.pos+' on chart: "'+h.sg.title+'" ('+(THEMES[h.sg.theme]||h.sg.theme)+')';d.append(b,document.createTextNode('Matches "'+h.c.name+'" by '+h.c.artistName+'. It now rises to the top of its theme.'));out.append(d)});
+      say(msg,hits.length?hits.length+' of your '+songs.length+' songs are on the chart right now ('+chart.length+' songs checked). Rankings updated.':'None of your '+songs.length+' songs are on the chart right now ('+chart.length+' songs checked). Nothing changed.','ok');
+    }catch(e){
+      if(!auto)say(msg,'Could not check the chart: '+(e.message||e)+(/fetch|network|load/i.test(e.message||'')?' (The browser may be blocking the chart website. Try again, or tell Claude.)':''),'err');
+    }
+  }
+  $('trendnow').onclick=()=>runTrending(false);
+  try{$('autotrend').checked=localStorage.getItem('mw_trend_auto')!=='0'}catch(e){$('autotrend').checked=true}
+  $('autotrend').onchange=()=>{try{localStorage.setItem('mw_trend_auto',$('autotrend').checked?'1':'0')}catch(e){}};
+  function autoTrend(){
+    let on=true,at=0;try{on=localStorage.getItem('mw_trend_auto')!=='0';at=+localStorage.getItem('mw_trend_at')||0}catch(e){}
+    if(on&&Date.now()-at>12*3600e3)runTrending(true);
+  }
   $('autopilot').onclick=async()=>{
     if(!confirm('Remove all your pins so the order is decided only by listeners?'))return;
     const {error}=await sb.from('songs').update({pin_rank:null}).not('pin_rank','is',null);
@@ -477,7 +540,7 @@ dialog h2{margin-top:0}
     const sm=document.createElement('div');sm.className='sm';
     const b=document.createElement('b');b.textContent=s.title;
     const sub=document.createElement('small');
-    sub.textContent=[s.artist,s.pin_rank!=null?'pinned':null,s.wallpaper_path?'has wallpaper':null,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
+    sub.textContent=[s.artist,s.pin_rank!=null?'pinned':null,s.trend_rank!=null?'trending #'+s.trend_rank:null,s.wallpaper_path?'has wallpaper':null,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
     sm.append(b,sub);
     const pb=iconBtn('play','Preview');pb.onclick=()=>preview(s,pb);
     const db=iconBtn('dots','More options for '+s.title);

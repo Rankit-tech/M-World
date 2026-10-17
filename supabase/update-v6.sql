@@ -1,0 +1,44 @@
+-- M. World update v6: songs that are trending on public charts rise to the top.
+-- Run once in Supabase > SQL Editor, AFTER update-v5.sql. Safe to run again.
+-- Order in each theme: songs you pinned by hand, then songs trending on the chart
+-- (best chart position first), then everything else by listens.
+
+alter table public.songs add column if not exists trend_rank int;
+
+drop function if exists public.ranked_songs(text);
+create function public.ranked_songs(p_theme text default null)
+returns table (
+  id uuid, title text, artist text, theme text, file_path text, credit text,
+  license text, created_at timestamptz, listens bigint, completes bigint,
+  score bigint, rank int, pin_rank int, wallpaper_path text, trend_rank int
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  with agg as (
+    select s.id, s.title, s.artist, s.theme, s.file_path, s.credit, s.license, s.created_at,
+           s.pin_rank, s.wallpaper_path, s.trend_rank,
+           count(p.id) filter (where p.kind = 'listen')   as listens,
+           count(p.id) filter (where p.kind = 'complete') as completes
+    from public.songs s
+    left join public.plays p on p.song_id = s.id
+    where p_theme is null or s.theme = p_theme
+    group by s.id
+  )
+  select a.id, a.title, a.artist, a.theme, a.file_path, a.credit, a.license, a.created_at,
+         a.listens, a.completes,
+         (a.listens + 2 * a.completes) as score,
+         (row_number() over (partition by a.theme
+                             order by a.pin_rank asc nulls last,
+                                      a.trend_rank asc nulls last,
+                                      (a.listens + 2 * a.completes) desc, a.created_at asc))::int as rank,
+         a.pin_rank, a.wallpaper_path, a.trend_rank
+  from agg a
+  order by a.theme, rank;
+$$;
+revoke all on function public.ranked_songs(text) from public;
+grant execute on function public.ranked_songs(text) to anon, authenticated;
+
+notify pgrst, 'reload schema';
