@@ -56,3 +56,6 @@ GitHub Pages on karo: Settings > Pages > Deploy from a branch > `main` / root.
 
 ## Update v3: song ko #1 / #2 par pin karna
 `supabase/update-v3.sql` ko SQL Editor mein ek baar run karo (update-v2.sql ke baad). Phir admin ke Songs tab mein song ke ⋮ menu se "Move up", "Move down", "Make #1" ya "Move to position..." karo. Pin kiya hua song wahin rehta hai jab tak "Unpin" na karo. Baaki songs listens ke hisaab se uske neeche aate hain.
+
+## Update v4: wallpapers + Assistant
+`supabase/update-v4.sql` ko SQL Editor mein ek baar run karo. Phir admin mein **Wallpapers** tab se har theme ki background photo badal sakte ho, aur **Assistant** tab gaano ke numbers padhkar batata hai kaun sa gaana popular hai, kaun skip hota hai, aur Auto-pilot se saare pins hata deta hai.

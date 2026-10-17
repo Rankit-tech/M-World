@@ -46,6 +46,8 @@ header{gap:.5rem}
 .chat h3{margin:0;padding:.7rem 1rem;font:600 1rem var(--body);display:flex;justify-content:space-between;align-items:center;gap:.6rem;border-bottom:1px solid rgba(255,255,255,.15)}
 #cclose{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;padding:0;cursor:pointer}
 .chat h3 span{margin-right:auto}
+#floatPause{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:.5rem;background:rgba(20,10,10,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:.55rem 1.1rem;font:600 .9rem var(--body);cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+#floatPause[hidden]{display:none}
 #myid{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;color:var(--ink);padding:.25rem .7rem;font:600 .75rem var(--body);letter-spacing:.04em;white-space:nowrap}.m .bub b.adm{color:#fbbf24!important}
 #msgs>:first-child{margin-top:auto}
 #msgs{flex:1;overflow-y:auto;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.5rem;font-size:.95rem;overflow-wrap:anywhere}
@@ -179,6 +181,7 @@ h1{padding:.14em .05em .2em;line-height:1.15}
   <button id="support">Support the radio</button>
   <p>© M. World. This is a fan-made nostalgia project. Songs belong to their artists and labels.</p>
 </footer>
+<button id="floatPause" hidden aria-label="Pause music"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg><span>Pause music</span></button>
 <dialog id="dlg"><p class="dt">Support the radio to keep it free</p><p class="ds">Scan with any UPI app. Every bit helps keep the music running.</p><img class="qr" alt="UPI payment QR code" src="assets/qr.png"><button id="close">Close</button></dialog>
 
 <script>
@@ -346,10 +349,35 @@ if(window.claude&&claude.use){
     r.onPeers(c=>{$('live').textContent=c.peers.filter(x=>x.kind==='viewer').length+' online'});
   }).catch(()=>{});
 }
+/* floating pause/play button: visible while music plays, even when scrolled down */
+(function(){
+  const fp=$('floatPause'),radio=$('radio');
+  const sync=()=>{fp.hidden=!radio.classList.contains('playing')};
+  new MutationObserver(sync).observe(radio,{attributes:true,attributeFilter:['class']});sync();
+  fp.onclick=()=>$('play').click();
+  /* tap on the wallpaper / empty space toggles the music */
+  document.addEventListener('click',e=>{
+    const t=e.target;
+    if(t.closest('a,button,input,textarea,select,dialog,.radio,.chat,header,#aboutus,#faq,footer,.drop'))return;
+    if(t===document.body||t===document.documentElement||t.id==='hero'||t.id==='herobg'||t.id==='scene'||t.id==='title'||t.id==='tag'||t.classList.contains('hero'))$('play').click();
+  });
+  /* coming back to the tab/app: show the support QR (at most once every 10 minutes) */
+  let hiddenAt=0;
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){hiddenAt=Date.now();return}
+    if(!hiddenAt||Date.now()-hiddenAt<3000)return;
+    hiddenAt=0;
+    let lastShown=0;try{lastShown=+localStorage.getItem('mw_qr_at')||0}catch(e){}
+    if(Date.now()-lastShown<600000)return;
+    const d=$('dlg');if(document.querySelector('dialog[open]'))return;
+    try{localStorage.setItem('mw_qr_at',String(Date.now()))}catch(e){}
+    try{d.showModal()}catch(e){}
+  });
+})();
 tune(0);
 </script>
 <script src="config.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=4"></script>
+<script src="backend.js?v=5"></script>
 </body>
 </html>

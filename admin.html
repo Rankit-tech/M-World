@@ -45,6 +45,16 @@ button:disabled{opacity:.5;cursor:default}
 .axis{display:flex;gap:4px;font-size:.62rem;color:var(--mute)}.axis span{flex:1;text-align:center;overflow:hidden}
 .top{margin:.5rem 0 0;padding-left:1.1rem;color:var(--mute)}
 
+/* wallpapers + assistant */
+.walls{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.8rem}
+.wall{border:1px solid var(--line);border-radius:.9rem;padding:.6rem;background:rgba(255,255,255,.04)}
+.wall .pic{height:110px;border-radius:.6rem;background:#111 center/cover no-repeat;margin-bottom:.5rem}
+.wall b{display:block;margin-bottom:.4rem}
+.wall .acts{display:flex;gap:.4rem;flex-wrap:wrap}
+.wall button{padding:.4rem .8rem;font-size:.85rem}
+.tip{border-left:3px solid var(--accent);background:rgba(255,255,255,.05);border-radius:.4rem;padding:.6rem .8rem;margin:.5rem 0;font-size:.92rem}
+.tip.good{border-color:#7be0a0}.tip.warn{border-color:#ffb86b}
+.tip b{display:block}
 /* songs */
 .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:0 0 .8rem}
 .chips button{background:transparent;color:var(--ink);border:1px solid var(--line);padding:.35rem .9rem;font-size:.85rem}
@@ -98,6 +108,8 @@ dialog h2{margin-top:0}
       <button role="tab" data-tab="upload">Upload</button>
       <button role="tab" data-tab="songs">Songs</button>
       <button role="tab" data-tab="chat">Chat</button>
+      <button role="tab" data-tab="wall">Wallpapers</button>
+      <button role="tab" data-tab="ai">Assistant</button>
     </div>
 
     <!-- Dashboard -->
@@ -153,6 +165,25 @@ dialog h2{margin-top:0}
       <div class="msg err" id="rankwarn" hidden>Ranking is not set up yet. Run supabase/update-v2.sql in the Supabase SQL Editor.</div>
       <div class="chips" id="chips" role="group" aria-label="Filter by theme"></div>
       <div id="songs"></div>
+    </section>
+
+    <!-- Wallpapers -->
+    <section class="card" data-pane="wall" role="tabpanel" hidden>
+      <h2>Wallpapers</h2>
+      <p class="hint">Change the background photo of each theme. Photos are shrunk automatically to save space. Use a wide photo (landscape). "Reset" brings back the original photo.</p>
+      <div class="msg" id="wmsg"></div>
+      <div id="walls" class="walls"></div>
+    </section>
+
+    <!-- Assistant -->
+    <section class="card" data-pane="ai" role="tabpanel" hidden>
+      <div class="bar" style="padding:0 0 .6rem"><h2 style="margin:0">Assistant</h2><button class="ghost" id="airefresh">Check again</button></div>
+      <p class="hint">The assistant reads your listening numbers and tells you which songs are popular, which ones people skip, and what to do next. It is a built-in rule-based helper, not an online AI service, so it costs nothing and needs no key.</p>
+      <div class="row" style="margin-bottom:.8rem">
+        <button id="autopilot">Auto-pilot: let listeners decide the order</button>
+      </div>
+      <div class="msg" id="aimsg"></div>
+      <div id="aiout"></div>
     </section>
 
     <!-- Chat -->
@@ -215,7 +246,7 @@ dialog h2{margin-top:0}
   window.addEventListener('resize',closeMenu);
 
   /* ---------- tabs ---------- */
-  const TABS=['dash','upload','songs','chat'];
+  const TABS=['dash','upload','songs','chat','wall','ai'];
   function showTab(t){
     if(!TABS.includes(t))t='dash';
     closeMenu();
@@ -225,6 +256,8 @@ dialog h2{margin-top:0}
     if(t==='dash')refreshStats();
     if(t==='songs')refreshSongs();
     if(t==='chat')refreshChat();
+    if(t==='wall')refreshWalls();
+    if(t==='ai')runAssistant();
   }
   document.querySelectorAll('#tabbar button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
@@ -303,6 +336,99 @@ dialog h2{margin-top:0}
     if(fail.length)say($('umsg'),done+' uploaded. Failed: '+fail.join('; '),'err');
     else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'". Open the Songs tab to see them.','ok');
     $('file').value='';$('title').value='';
+  };
+
+  /* ---------- wallpapers ---------- */
+  const DEFAULT_PICS={salon:'assets/salon.jpg',bus:'assets/bus.jpg',papa:'assets/papa.jpg',rap:'assets/rap.jpg',raju:'assets/raju.jpg'};
+  let walls={};
+  async function refreshWalls(){
+    const {data,error}=await sb.from('wallpapers').select('theme,file_path,updated_at');
+    if(error){say($('wmsg'),'Wallpapers are not set up yet. Run supabase/update-v4.sql in the Supabase SQL Editor.','err')}else say($('wmsg'),'');
+    walls={};(data||[]).forEach(w=>walls[w.theme]=w);
+    const box=$('walls');box.textContent='';
+    Object.keys(THEMES).forEach(k=>{
+      const c=document.createElement('div');c.className='wall';
+      const pic=document.createElement('div');pic.className='pic';
+      const w=walls[k];
+      pic.style.backgroundImage='url("'+(w?sb.storage.from('wallpapers').getPublicUrl(w.file_path).data.publicUrl+'?v='+encodeURIComponent(w.updated_at):DEFAULT_PICS[k])+'")';
+      const b=document.createElement('b');b.textContent=THEMES[k]+(w?' (custom)':' (original)');
+      const acts=document.createElement('div');acts.className='acts';
+      const inp=document.createElement('input');inp.type='file';inp.accept='image/jpeg,image/png,image/webp';inp.hidden=true;
+      const up=document.createElement('button');up.type='button';up.textContent='Change photo';up.onclick=()=>inp.click();
+      inp.onchange=()=>{if(inp.files[0])setWall(k,inp.files[0])};
+      acts.append(up,inp);
+      if(w){const rs=document.createElement('button');rs.type='button';rs.className='ghost';rs.textContent='Reset';rs.onclick=()=>resetWall(k);acts.append(rs)}
+      c.append(pic,b,acts);box.append(c);
+    });
+  }
+  function shrink(file){
+    return new Promise((res,rej)=>{
+      const img=new Image(),u=URL.createObjectURL(file);
+      img.onload=()=>{
+        const max=1800,sc=Math.min(1,max/Math.max(img.width,img.height));
+        const cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(u);
+        cv.toBlob(b=>b?res(b):rej(new Error('Could not process the photo')),'image/jpeg',.85);
+      };
+      img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('This file is not a readable image'))};
+      img.src=u;
+    });
+  }
+  async function setWall(k,file){
+    if(!file.type.startsWith('image/')){say($('wmsg'),'Please choose an image.','err');return}
+    say($('wmsg'),'Uploading '+THEMES[k]+' photo...');
+    try{
+      const blob=await shrink(file);
+      const path=k+'/'+Date.now()+'.jpg';
+      const u=await sb.storage.from('wallpapers').upload(path,blob,{contentType:'image/jpeg',upsert:false});
+      if(u.error)throw u.error;
+      const old=walls[k]&&walls[k].file_path;
+      const r=await sb.from('wallpapers').upsert({theme:k,file_path:path,updated_at:new Date().toISOString()});
+      if(r.error){await sb.storage.from('wallpapers').remove([path]);throw r.error}
+      if(old)await sb.storage.from('wallpapers').remove([old]);
+      say($('wmsg'),THEMES[k]+' wallpaper changed. Visitors see it on their next refresh.','ok');
+    }catch(e){say($('wmsg'),'Could not change it: '+(e.message||e)+(/bucket|not found/i.test(e.message||'')?' (Run supabase/update-v4.sql first.)':''),'err')}
+    refreshWalls();
+  }
+  async function resetWall(k){
+    if(!confirm('Bring back the original '+THEMES[k]+' photo?'))return;
+    const old=walls[k]&&walls[k].file_path;
+    const r=await sb.from('wallpapers').delete().eq('theme',k);
+    if(r.error){say($('wmsg'),'Could not reset: '+r.error.message,'err');return}
+    if(old)await sb.storage.from('wallpapers').remove([old]);
+    say($('wmsg'),'Original photo is back.','ok');refreshWalls();
+  }
+
+  /* ---------- assistant (rule-based) ---------- */
+  async function runAssistant(){
+    const out=$('aiout');out.textContent='';say($('aimsg'),'Reading your numbers...');
+    const r=await sb.rpc('ranked_songs',{p_theme:null});
+    if(r.error||!Array.isArray(r.data)){say($('aimsg'),'Ranking is not set up yet. Run supabase/update-v2.sql (and update-v3.sql) in the Supabase SQL Editor.','err');return}
+    say($('aimsg'),'');
+    const songs=r.data,tips=[];
+    const add=(cls,h,t)=>tips.push({cls,h,t});
+    const days=s=>(Date.now()-new Date(s.created_at).getTime())/864e5;
+    if(!songs.length)add('warn','No songs yet','Upload songs in the Upload tab. Start with at least 3 per theme.');
+    Object.keys(THEMES).forEach(k=>{
+      const l=songs.filter(s=>s.theme===k).sort((a,b)=>b.score-a.score);
+      if(l.length<3)add('warn',THEMES[k]+': only '+l.length+' song'+(l.length===1?'':'s'),'Add more songs so listeners do not hear the same ones again and again.');
+      if(l[0]&&l[0].score>0)add('good',THEMES[k]+': #1 by listeners is "'+l[0].title+'"',l[0].listens+' listens, '+l[0].completes+' full plays. '+(l[0].pin_rank==null?'It is on top automatically.':'You pinned it.'));
+    });
+    songs.filter(s=>s.listens>=5&&s.completes/s.listens<.25).forEach(s=>add('warn','"'+s.title+'" is skipped a lot','Only '+s.completes+' of '+s.listens+' listeners finished it. Think about replacing it with a similar but better song.'));
+    songs.filter(s=>s.listens===0&&days(s)>7).forEach(s=>add('warn','"'+s.title+'" has had no listeners for over a week','It sits at the bottom. Try pinning it to #2 for a few days to give it a chance, or delete it.'));
+    songs.filter(s=>s.pin_rank!=null).forEach(s=>{
+      const best=songs.filter(x=>x.theme===s.theme&&x.pin_rank==null).sort((a,b)=>b.score-a.score)[0];
+      if(best&&best.score>s.score&&s.score>=0)add('warn','Pinned "'+s.title+'" is less popular than "'+best.title+'"','Your pin keeps it above a song listeners like more. Use Auto-pilot if you want listeners to decide.');
+    });
+    if(!tips.length)add('good','All good','Nothing needs your attention right now.');
+    tips.forEach(t=>{const d=document.createElement('div');d.className='tip '+t.cls;const b=document.createElement('b');b.textContent=t.h;d.append(b,document.createTextNode(t.t));out.append(d)});
+  }
+  $('airefresh').onclick=runAssistant;
+  $('autopilot').onclick=async()=>{
+    if(!confirm('Remove all your pins so the order is decided only by listeners?'))return;
+    const {error}=await sb.from('songs').update({pin_rank:null}).not('pin_rank','is',null);
+    if(error){say($('aimsg'),/pin_rank/.test(error.message)?'Run supabase/update-v3.sql first.':'Could not do it: '+error.message,'err');return}
+    say($('aimsg'),'Auto-pilot is on. Songs are now ordered by listeners only.','ok');runAssistant();
   };
 
   /* ---------- songs ---------- */

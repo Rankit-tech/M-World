@@ -188,5 +188,19 @@
     }
   } catch (e) {}
 
+  /* ---------- Custom wallpapers set by the admin ---------- */
+  (async function () {
+    try {
+      const { data, error } = await sb.from('wallpapers').select('theme,file_path,updated_at');
+      if (error || !data) return;
+      data.forEach(w => {
+        const u = sb.storage.from('wallpapers').getPublicUrl(w.file_path).data.publicUrl;
+        PHOTOS[w.theme] = u + '?v=' + encodeURIComponent(w.updated_at);
+      });
+      const id = S[cur].id, hb = $('herobg');
+      if (PHOTOS[id]) { hb.style.backgroundImage = 'url("' + PHOTOS[id] + '")'; hb.hidden = false; }
+    } catch (e) {}
+  })();
+
   loadTheme();
 })();
