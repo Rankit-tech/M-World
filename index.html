@@ -232,8 +232,11 @@ function hiss(ms){
     src.buffer=buf;src.connect(g).connect(actx.destination);src.start();
   }catch(e){}
 }
-function tune(i){
-  cur=(i+S.length)%S.length;const s=S[cur];
+const HIDDEN=new Set();
+function tune(i,dir){
+  dir=dir||1;cur=(i+S.length)%S.length;
+  for(let g=0;HIDDEN.has(S[cur].id)&&g<S.length;g++)cur=(cur+dir+S.length)%S.length;
+  const s=S[cur];
   document.body.dataset.theme=s.id;
   [...tabs.children].forEach((b,k)=>b.setAttribute('aria-pressed',k===cur));
   $('title').textContent=s.hi;$('tag').textContent=s.tag;$('h2').textContent=s.h2;$('about').textContent=s.about;
@@ -244,8 +247,8 @@ function tune(i){
   document.title=s.tab+" | M. World";
   if(playing)hiss(350);
 }
-$('prev').onclick=()=>tune(cur-1);
-$('next').onclick=()=>tune(cur+1);
+$('prev').onclick=()=>tune(cur-1,-1);
+$('next').onclick=()=>tune(cur+1,1);
 $('play').onclick=()=>{
   playing=!playing;
   $('play').querySelector('path').setAttribute('d',playing?PAUSE:PLAY);
@@ -378,6 +381,6 @@ tune(0);
 </script>
 <script src="config.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=6"></script>
+<script src="backend.js?v=7"></script>
 </body>
 </html>

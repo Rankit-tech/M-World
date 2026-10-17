@@ -65,3 +65,6 @@ GitHub Pages on karo: Settings > Pages > Deploy from a branch > `main` / root.
 
 ## Update v6: trending (public chart) auto-boost
 `supabase/update-v6.sql` ko SQL Editor mein ek baar run karo (update-v5.sql ke baad). Admin ke Assistant tab mein "Check trending now" Apple Music India ka top-100 chart padhta hai aur tumhare matching gaano ko unki theme mein upar laata hai. "Auto" tick ho to admin page kholne par har 12 ghante mein khud chalta hai. Manual pin hamesha upar rehta hai.
+
+## Update v7: theme ko Private / Public karna
+`supabase/update-v7.sql` ko SQL Editor mein ek baar run karo (update-v6.sql ke baad). Admin ke Wallpapers tab mein har theme par Public/Private button hai. Private theme visitors ko nahi dikhti (menu se gayab, gaane bhi nahi). Admin sign-in hone par wo "(private)" likhi hui dikhti hai.

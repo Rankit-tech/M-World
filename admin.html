@@ -52,6 +52,9 @@ button:disabled{opacity:.5;cursor:default}
 .wall b{display:block;margin-bottom:.4rem}
 .wall .acts{display:flex;gap:.4rem;flex-wrap:wrap}
 .wall button{padding:.4rem .8rem;font-size:.85rem}
+.wall .vis{width:100%;margin-bottom:.5rem;text-align:left}
+.wall .vis.pub{background:rgba(123,224,160,.15);color:#7be0a0;border:1px solid #7be0a0}
+.wall .vis.priv{background:rgba(255,138,138,.15);color:#ff8a8a;border:1px solid #ff8a8a}
 .tip{border-left:3px solid var(--accent);background:rgba(255,255,255,.05);border-radius:.4rem;padding:.6rem .8rem;margin:.5rem 0;font-size:.92rem}
 .tip.good{border-color:#7be0a0}.tip.warn{border-color:#ffb86b}
 .tip b{display:block}
@@ -162,7 +165,7 @@ dialog h2{margin-top:0}
 
     <!-- Songs -->
     <section class="card" data-pane="songs" role="tabpanel" hidden>
-      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v7</small></h2>
+      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v8</small></h2>
       <p class="hint">Songs are ranked by listeners: the most listened song is #1 and plays first on the site. A listen counts when someone stays for 20 seconds, and a full play counts double. New songs start at the bottom and move up as people listen. Use the three dots on a song to move it to any position (#1, #2...), edit or delete it. A moved song stays pinned there until you unpin it.</p>
       <div class="msg err" id="rankwarn" hidden>Ranking is not set up yet. Run supabase/update-v2.sql in the Supabase SQL Editor.</div>
       <div class="chips" id="chips" role="group" aria-label="Filter by theme"></div>
@@ -171,8 +174,8 @@ dialog h2{margin-top:0}
 
     <!-- Wallpapers -->
     <section class="card" data-pane="wall" role="tabpanel" hidden>
-      <h2>Wallpapers</h2>
-      <p class="hint">Change the background photo of each theme. Photos are shrunk automatically to save space. Use a wide photo (landscape). "Reset" brings back the original photo.</p>
+      <h2>Wallpapers and visibility</h2>
+      <p class="hint">Make a whole theme public or private (a private theme is hidden from visitors, you still see it). Change the background photo of each theme. Photos are shrunk automatically to save space. Use a wide photo (landscape). "Reset" brings back the original photo.</p>
       <div class="msg" id="wmsg"></div>
       <div id="walls" class="walls"></div>
     </section>
@@ -366,6 +369,9 @@ dialog h2{margin-top:0}
     const {data,error}=await sb.from('wallpapers').select('theme,file_path,updated_at');
     if(error){say($('wmsg'),'Wallpapers are not set up yet. Run supabase/update-v4.sql in the Supabase SQL Editor.','err')}else say($('wmsg'),'');
     walls={};(data||[]).forEach(w=>walls[w.theme]=w);
+    const ts=await sb.from('theme_settings').select('theme,is_public');
+    const vis={};(ts.data||[]).forEach(t=>vis[t.theme]=t.is_public);
+    if(ts.error&&!error)say($('wmsg'),'Public/Private is not set up yet. Run supabase/update-v7.sql in the Supabase SQL Editor.','err');
     const box=$('walls');box.textContent='';
     Object.keys(THEMES).forEach(k=>{
       const c=document.createElement('div');c.className='wall';
@@ -379,8 +385,21 @@ dialog h2{margin-top:0}
       inp.onchange=()=>{if(inp.files[0])setWall(k,inp.files[0])};
       acts.append(up,inp);
       if(w){const rs=document.createElement('button');rs.type='button';rs.className='ghost';rs.textContent='Reset';rs.onclick=()=>resetWall(k);acts.append(rs)}
-      c.append(pic,b,acts);box.append(c);
+      const pub=vis[k]!==false;
+      const vb=document.createElement('button');vb.type='button';vb.className=pub?'vis pub':'vis priv';
+      vb.textContent=pub?'Public \u2013 everyone can see it':'Private \u2013 only you can see it';
+      vb.setAttribute('aria-pressed',String(!pub));
+      vb.onclick=()=>setVisible(k,!pub);
+      c.append(pic,b,vb,acts);box.append(c);
     });
+  }
+  async function setVisible(k,pub){
+    const msg=pub?'Make "'+THEMES[k]+'" public? Everyone will see this station and its songs.':'Make "'+THEMES[k]+'" private? Visitors will no longer see this station or its songs. You will still see it when you are signed in as admin.';
+    if(!confirm(msg))return;
+    const r=await sb.from('theme_settings').upsert({theme:k,is_public:pub,updated_at:new Date().toISOString()});
+    if(r.error){say($('wmsg'),/theme_settings/.test(r.error.message)?'Run supabase/update-v7.sql in the Supabase SQL Editor first.':'Could not change it: '+r.error.message,'err');return}
+    say($('wmsg'),THEMES[k]+' is now '+(pub?'public':'private')+'. Visitors see the change on their next refresh.','ok');
+    refreshWalls();
   }
   function shrink(file){
     return new Promise((res,rej)=>{

@@ -88,7 +88,7 @@
   }
 
   const origTune = tune;
-  tune = function (i) { origTune(i); loadTheme(); };
+  tune = function (i, d) { origTune(i, d); loadTheme(); };
 
   $('play').onclick = () => {
     if (!songs.length) return;
@@ -97,8 +97,8 @@
     audio.play().then(() => { on = true; setIcon(true); })
       .catch(() => { $('artist').textContent = 'Could not play this song'; });
   };
-  $('prev').onclick = () => { if (songs.length) load(idx - 1, on); else tune(cur - 1); };
-  $('next').onclick = () => { if (songs.length) load(idx + 1, on); else tune(cur + 1); };
+  $('prev').onclick = () => { if (songs.length) load(idx - 1, on); else tune(cur - 1, -1); };
+  $('next').onclick = () => { if (songs.length) load(idx + 1, on); else tune(cur + 1, 1); };
   $('vol').addEventListener('click', () => { audio.muted = muted; });
 
   function logPlay(kind) {
@@ -195,6 +195,27 @@
       sb.from('visits').insert({ visitor: vid, theme: S[cur].id }).then(() => {}, () => {});
     }
   } catch (e) {}
+
+  /* ---------- Private themes (hidden from visitors, visible to the admin) ---------- */
+  (async function () {
+    try {
+      const { data, error } = await sb.from('theme_settings').select('theme,is_public');
+      if (error || !data) return;
+      let admin = false;
+      try {
+        const ses = await sb.auth.getSession();
+        if (ses.data && ses.data.session) { const r = await sb.rpc('is_admin'); admin = r.data === true; }
+      } catch (e) {}
+      const priv = data.filter(t => t.is_public === false).map(t => t.theme);
+      priv.forEach(id => { if (!admin) HIDDEN.add(id); });
+      [...document.getElementById('tabs').children].forEach((b, k) => {
+        const isPriv = priv.includes(S[k].id);
+        b.hidden = isPriv && !admin;
+        if (isPriv && admin && !/private/.test(b.textContent)) b.textContent += ' (private)';
+      });
+      if (HIDDEN.has(S[cur].id)) tune(cur, 1);
+    } catch (e) {}
+  })();
 
   /* ---------- Custom wallpapers set by the admin ---------- */
   (async function () {
