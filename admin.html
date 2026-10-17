@@ -138,6 +138,8 @@ dialog h2{margin-top:0}
       <h2>Upload songs</h2>
       <label for="file">Audio files (mp3, m4a, ogg or wav, up to 15 MB each). You can pick many at once.</label>
       <input id="file" type="file" accept="audio/*" multiple>
+      <label for="wfile">Wallpaper for this song (optional photo; if you pick many songs, all get this photo)</label>
+      <input id="wfile" type="file" accept="image/jpeg,image/png,image/webp">
       <div class="row">
         <div><label for="title">Title (only when you pick one file; otherwise the file name is used)</label><input id="title" maxlength="120"></div>
         <div><label for="artist">Artist</label><input id="artist" maxlength="120"></div>
@@ -160,7 +162,7 @@ dialog h2{margin-top:0}
 
     <!-- Songs -->
     <section class="card" data-pane="songs" role="tabpanel" hidden>
-      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v5</small></h2>
+      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v6</small></h2>
       <p class="hint">Songs are ranked by listeners: the most listened song is #1 and plays first on the site. A listen counts when someone stays for 20 seconds, and a full play counts double. New songs start at the bottom and move up as people listen. Use the three dots on a song to move it to any position (#1, #2...), edit or delete it. A moved song stays pinned there until you unpin it.</p>
       <div class="msg err" id="rankwarn" hidden>Ranking is not set up yet. Run supabase/update-v2.sql in the Supabase SQL Editor.</div>
       <div class="chips" id="chips" role="group" aria-label="Filter by theme"></div>
@@ -323,20 +325,30 @@ dialog h2{margin-top:0}
       if(f.size>15*1024*1024){say($('umsg'),f.name+' is bigger than 15 MB. Convert it to 128 kbps mp3 first.','err');return}
     }
     const theme=$('theme').value,single=files.length===1&&$('title').value.trim();
-    $('up').disabled=true;let done=0,fail=[];
+    const wf=$('wfile').files[0];
+    if(wf&&!wf.type.startsWith('image/')){say($('umsg'),'The wallpaper must be an image.','err');return}
+    $('up').disabled=true;let done=0,fail=[],wfail=0,wblob=null;
+    if(wf){try{wblob=await shrink(wf)}catch(e){say($('umsg'),'Wallpaper problem: '+e.message,'err');$('up').disabled=false;return}}
     for(const f of files){
       say($('umsg'),'Uploading '+(done+fail.length+1)+' of '+files.length+'...');
       const path=theme+'/'+Date.now()+'-'+safe(f.name);
       const u=await sb.storage.from('songs').upload(path,f,{contentType:f.type,upsert:false});
       if(u.error){fail.push(f.name+': '+u.error.message);continue}
-      const r=await sb.from('songs').insert({title:single||nice(f.name),artist:$('artist').value.trim()||null,theme,file_path:path,license:$('license').value,credit:$('credit').value.trim()||null});
+      const r=await sb.from('songs').insert({title:single||nice(f.name),artist:$('artist').value.trim()||null,theme,file_path:path,license:$('license').value,credit:$('credit').value.trim()||null}).select('id').single();
       if(r.error){await sb.storage.from('songs').remove([path]);fail.push(f.name+': '+r.error.message);continue}
+      if(wblob){
+        const wp='songs/'+r.data.id+'-'+Date.now()+'.jpg';
+        const wu=await sb.storage.from('wallpapers').upload(wp,wblob,{contentType:'image/jpeg',upsert:false});
+        const wr=wu.error?wu:await sb.from('songs').update({wallpaper_path:wp}).eq('id',r.data.id);
+        if(wr.error){wfail++;if(!wu.error)await sb.storage.from('wallpapers').remove([wp])}
+      }
       done++;
     }
     $('up').disabled=false;
     if(fail.length)say($('umsg'),done+' uploaded. Failed: '+fail.join('; '),'err');
-    else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'". Open the Songs tab to see them.','ok');
-    $('file').value='';$('title').value='';
+    else if(wfail)say($('umsg'),done+' song(s) uploaded, but the wallpaper failed for '+wfail+'. Run supabase/update-v4.sql and update-v5.sql, then set it from the Songs tab.','err');
+    else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'".'+(wblob?' Wallpaper added.':'')+' Open the Songs tab to see them.','ok');
+    $('file').value='';$('wfile').value='';$('title').value='';
   };
 
   /* ---------- wallpapers ---------- */
