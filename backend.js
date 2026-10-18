@@ -31,12 +31,19 @@
     $('artist').textContent = [s.artist, s.credit].filter(Boolean).join(' \u00b7 ');
     applyBg();
   }
-  // Each song can have its own wallpaper; otherwise the theme photo is shown.
+  // Each song can have its own thumbnail (cover picture) shown in the player.
+  // The big background photo always stays the theme photo.
   function applyBg() {
-    const s = songs[idx], hb = $('herobg');
-    let url = PHOTOS[S[cur].id];
-    if (s && s.wallpaper_path) url = sb.storage.from('wallpapers').getPublicUrl(s.wallpaper_path).data.publicUrl;
+    const s = songs[idx], art = $('art'), hb = $('herobg');
+    const url = PHOTOS[S[cur].id];
     if (url) { hb.style.backgroundImage = 'url("' + url + '")'; hb.hidden = false; } else hb.hidden = true;
+    if (s && s.wallpaper_path) {
+      art.style.backgroundImage = 'url("' + sb.storage.from('wallpapers').getPublicUrl(s.wallpaper_path).data.publicUrl + '")';
+      art.textContent = '';
+    } else {
+      art.style.backgroundImage = '';
+      art.textContent = EM[S[cur].id] || '';
+    }
   }
   let listened = 0, lastT = null, gotListen = false, gotDone = false;
   function load(i, autoplay) {
@@ -88,7 +95,7 @@
   }
 
   const origTune = tune;
-  tune = function (i, d) { origTune(i, d); loadTheme(); };
+  tune = function (i, d) { origTune(i, d); loadTheme(); applyBg(); };
 
   $('play').onclick = () => {
     if (!songs.length) return;

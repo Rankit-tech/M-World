@@ -145,7 +145,7 @@ dialog h2{margin-top:0}
       <h2>Upload songs</h2>
       <label for="file">Audio files (mp3, m4a, ogg or wav, up to 15 MB each). You can pick many at once.</label>
       <input id="file" type="file" accept="audio/*" multiple>
-      <label for="wfile">Wallpaper for this song (optional photo; if you pick many songs, all get this photo)</label>
+      <label for="wfile">Thumbnail (cover picture) for this song, optional. It shows in the music player. If you pick many songs, all get this picture.</label>
       <input id="wfile" type="file" accept="image/jpeg,image/png,image/webp">
       <div class="row">
         <div><label for="title">Title (only when you pick one file; otherwise the file name is used)</label><input id="title" maxlength="120"></div>
@@ -169,7 +169,7 @@ dialog h2{margin-top:0}
 
     <!-- Songs -->
     <section class="card" data-pane="songs" role="tabpanel" hidden>
-      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v8</small></h2>
+      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v9</small></h2>
       <p class="hint">Songs are ranked by listeners: the most listened song is #1 and plays first on the site. A listen counts when someone stays for 20 seconds, and a full play counts double. New songs start at the bottom and move up as people listen. Use the three dots on a song to move it to any position (#1, #2...), edit or delete it. A moved song stays pinned there until you unpin it.</p>
       <div class="msg err" id="rankwarn" hidden>Ranking is not set up yet. Run supabase/update-v2.sql in the Supabase SQL Editor.</div>
       <div class="chips" id="chips" role="group" aria-label="Filter by theme"></div>
@@ -341,9 +341,9 @@ dialog h2{margin-top:0}
     }
     const theme=$('theme').value,single=files.length===1&&$('title').value.trim();
     const wf=$('wfile').files[0];
-    if(wf&&!wf.type.startsWith('image/')){say($('umsg'),'The wallpaper must be an image.','err');return}
+    if(wf&&!wf.type.startsWith('image/')){say($('umsg'),'The thumbnail must be an image.','err');return}
     $('up').disabled=true;let done=0,fail=[],wfail=0,wblob=null;
-    if(wf){try{wblob=await shrink(wf)}catch(e){say($('umsg'),'Wallpaper problem: '+e.message,'err');$('up').disabled=false;return}}
+    if(wf){try{wblob=await shrink(wf,true)}catch(e){say($('umsg'),'Thumbnail problem: '+e.message,'err');$('up').disabled=false;return}}
     for(const f of files){
       say($('umsg'),'Uploading '+(done+fail.length+1)+' of '+files.length+'...');
       const path=theme+'/'+Date.now()+'-'+safe(f.name);
@@ -361,8 +361,8 @@ dialog h2{margin-top:0}
     }
     $('up').disabled=false;
     if(fail.length)say($('umsg'),done+' uploaded. Failed: '+fail.join('; '),'err');
-    else if(wfail)say($('umsg'),done+' song(s) uploaded, but the wallpaper failed for '+wfail+'. Run supabase/update-v4.sql and update-v5.sql, then set it from the Songs tab.','err');
-    else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'".'+(wblob?' Wallpaper added.':'')+' Open the Songs tab to see them.','ok');
+    else if(wfail)say($('umsg'),done+' song(s) uploaded, but the thumbnail failed for '+wfail+'. Run supabase/update-v4.sql and update-v5.sql, then set it from the Songs tab.','err');
+    else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'".'+(wblob?' Thumbnail added.':'')+' Open the Songs tab to see them.','ok');
     $('file').value='';$('wfile').value='';$('title').value='';
   };
 
@@ -405,13 +405,21 @@ dialog h2{margin-top:0}
     say($('wmsg'),THEMES[k]+' is now '+(pub?'public':'private')+'. Visitors see the change on their next refresh.','ok');
     refreshWalls();
   }
-  function shrink(file){
+  function shrink(file,square){
     return new Promise((res,rej)=>{
       const img=new Image(),u=URL.createObjectURL(file);
       img.onload=()=>{
-        const max=1800,sc=Math.min(1,max/Math.max(img.width,img.height));
-        const cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
-        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(u);
+        const cv=document.createElement('canvas');
+        if(square){
+          const side=Math.min(img.width,img.height),out=Math.min(600,side);
+          cv.width=cv.height=out;
+          cv.getContext('2d').drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,0,0,out,out);
+        }else{
+          const max=1800,sc=Math.min(1,max/Math.max(img.width,img.height));
+          cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+          cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+        }
+        URL.revokeObjectURL(u);
         cv.toBlob(b=>b?res(b):rej(new Error('Could not process the photo')),'image/jpeg',.85);
       };
       img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('This file is not a readable image'))};
@@ -563,7 +571,7 @@ dialog h2{margin-top:0}
     const sm=document.createElement('div');sm.className='sm';
     const b=document.createElement('b');b.textContent=s.title;
     const sub=document.createElement('small');
-    sub.textContent=[s.artist,s.pin_rank!=null?'pinned':null,s.trend_rank!=null?'trending #'+s.trend_rank:null,s.wallpaper_path?'has wallpaper':null,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
+    sub.textContent=[s.artist,s.pin_rank!=null?'pinned':null,s.trend_rank!=null?'trending #'+s.trend_rank:null,s.wallpaper_path?'has thumbnail':null,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
     sm.append(b,sub);
     const pb=iconBtn('play','Preview');pb.onclick=()=>preview(s,pb);
     const db=iconBtn('dots','More options for '+s.title);
@@ -573,12 +581,12 @@ dialog h2{margin-top:0}
       {label:'Make #1',fn:()=>moveSong(s,1)},
       {label:'Move to position\u2026',fn:()=>{const v=prompt('New position in '+(THEMES[s.theme]||s.theme)+' (1 = top):',s.rank);if(v!==null)moveSong(s,parseInt(v,10))}},
       ...(s.pin_rank!=null?[{label:'Unpin (back to automatic rank)',fn:()=>unpinSong(s)}]:[]),
-      {label:s.wallpaper_path?'Change wallpaper of this song':'Set wallpaper for this song',fn:()=>pickSongWall(s)},
-      ...(s.wallpaper_path?[{label:'Remove song wallpaper',fn:()=>removeSongWall(s)}]:[]),
+      {label:s.wallpaper_path?'Change thumbnail of this song':'Set thumbnail for this song',fn:()=>pickSongWall(s)},
+      ...(s.wallpaper_path?[{label:'Remove song thumbnail',fn:()=>removeSongWall(s)}]:[]),
       {label:'Edit title, artist, theme',fn:()=>openEdit(s)},
       {label:'Delete song',danger:true,fn:()=>deleteSong(s)}
     ]);
-    const wb=iconBtn('img',s.wallpaper_path?'Change wallpaper of this song':'Set wallpaper for this song');wb.title=wb.getAttribute('aria-label');if(s.wallpaper_path)wb.style.borderColor='var(--accent)';wb.onclick=()=>pickSongWall(s);
+    const wb=iconBtn('img',s.wallpaper_path?'Change thumbnail of this song':'Set thumbnail for this song');wb.title=wb.getAttribute('aria-label');if(s.wallpaper_path)wb.style.borderColor='var(--accent)';wb.onclick=()=>pickSongWall(s);
     d.append(rk,sm,pb,wb,db);return d;
   }
   function renderSongs(){
@@ -620,14 +628,14 @@ dialog h2{margin-top:0}
     const s=wallFor,f=wallPick.files[0];if(!s||!f)return;
     if(!f.type.startsWith('image/')){alert('Please choose an image.');return}
     try{
-      const blob=await shrink(f);
+      const blob=await shrink(f,true);
       const path='songs/'+s.id+'-'+Date.now()+'.jpg';
       const u=await sb.storage.from('wallpapers').upload(path,blob,{contentType:'image/jpeg',upsert:false});
       if(u.error)throw u.error;
       const r=await sb.from('songs').update({wallpaper_path:path}).eq('id',s.id);
       if(r.error){await sb.storage.from('wallpapers').remove([path]);throw r.error}
       if(s.wallpaper_path)await sb.storage.from('wallpapers').remove([s.wallpaper_path]);
-    }catch(e){alert(/wallpaper_path/.test(e.message||'')?'Run supabase/update-v5.sql in the Supabase SQL Editor first.':/bucket|not found/i.test(e.message||'')?'Run supabase/update-v4.sql first.':'Could not set wallpaper: '+(e.message||e))}
+    }catch(e){alert(/wallpaper_path/.test(e.message||'')?'Run supabase/update-v5.sql in the Supabase SQL Editor first.':/bucket|not found/i.test(e.message||'')?'Run supabase/update-v4.sql first.':'Could not set thumbnail: '+(e.message||e))}
     refreshSongs();
   };
   async function removeSongWall(s){
