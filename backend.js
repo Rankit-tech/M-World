@@ -52,13 +52,14 @@
     audio.src = urlOf(songs[idx].file_path);
     show();
     $('fill').style.width = '0%'; $('t1').textContent = '0:00'; $('t2').textContent = '0:00';
-    if (autoplay) tryPlay(0);
+    if (autoplay) { on = true; setIcon(true); tryPlay(0); }
     updateSession();
   }
   // Phones are strict: if play() is refused right after a track change, retry once the new track is ready.
   function tryPlay(n) {
     const want = idx;
-    audio.play().then(() => { on = true; setIcon(true); }).catch(() => {
+    audio.play().then(() => { if (want === idx && on) setIcon(true); }).catch(() => {
+      if (!on) return;
       if (n < 2 && want === idx) {
         const retry = () => { audio.removeEventListener('canplay', retry); if (want === idx) tryPlay(n + 1); };
         audio.addEventListener('canplay', retry);
@@ -97,12 +98,14 @@
   const origTune = tune;
   tune = function (i, d) { origTune(i, d); loadTheme(); applyBg(); };
 
+  // Pause/play follows what the listener wants right now (not only what the audio is doing),
+  // so a tap while a song is still loading on a slow phone connection pauses it at once.
   $('play').onclick = () => {
     if (!songs.length) return;
-    if (on) { audio.pause(); on = false; setIcon(false); return; }
+    if (on || !audio.paused) { on = false; audio.pause(); setIcon(false); return; }
     if (!audio.src) load(idx, false);
-    audio.play().then(() => { on = true; setIcon(true); })
-      .catch(() => { $('artist').textContent = 'Could not play this song'; });
+    on = true; setIcon(true);
+    audio.play().catch(() => { on = false; setIcon(false); $('artist').textContent = 'Could not play this song'; });
   };
   $('prev').onclick = () => { if (songs.length) load(idx - 1, on); else tune(cur - 1, -1); };
   $('next').onclick = () => { if (songs.length) load(idx + 1, on); else tune(cur + 1, 1); };

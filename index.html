@@ -91,13 +91,35 @@ h1{font:800 clamp(3rem,12vw,7.5rem)/1.05 var(--display);margin:0;text-wrap:balan
 @keyframes shine{to{background-position:-200% 0}}
 .playing .play{animation:playpulse 2s ease-out infinite}
 @keyframes playpulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 60%,transparent)}100%{box-shadow:0 0 0 14px transparent}}
-@media(prefers-reduced-motion:reduce){.playing .art,.playing .art::after,.playing .eq i,.playing .bar i,.playing .play{animation:none}.playing .eq i{height:10px}}
+/* more life in the player: moving glow, rising notes, scrolling title, press feedback */
+.radio{position:relative;overflow:hidden}
+.radio::before{content:"";position:absolute;inset:-40%;z-index:0;pointer-events:none;opacity:0;transition:opacity .6s;background:conic-gradient(from 0deg at 30% 50%,transparent 0 25%,color-mix(in srgb,var(--accent) 22%,transparent) 40%,transparent 55%,color-mix(in srgb,var(--glow) 40%,transparent) 75%,transparent)}
+.radio>*{position:relative;z-index:1}
+.radio>.eq{position:absolute}
+.playing.radio::before,.radio.playing::before{opacity:1;animation:aurora 9s linear infinite}
+@keyframes aurora{to{transform:rotate(360deg)}}
+.notes{position:absolute!important;left:1.1rem;top:0;width:68px;height:100%;pointer-events:none;z-index:2}
+.notes i{position:absolute;bottom:.9rem;left:50%;font-style:normal;font-size:1rem;color:var(--accent);opacity:0}
+.playing .notes i{animation:note 3.2s ease-in infinite}
+.playing .notes i:nth-child(2){animation-delay:-1.1s;left:25%}
+.playing .notes i:nth-child(3){animation-delay:-2.1s;left:70%}
+@keyframes note{0%{transform:translate(0,0) scale(.7);opacity:0}15%{opacity:.95}100%{transform:translate(14px,-62px) rotate(18deg) scale(1.15);opacity:0}}
+.mid b#track.scroll{text-overflow:clip}
+.mid b#track.scroll span{display:inline-block;animation:marq 14s linear infinite}
+@keyframes marq{to{transform:translateX(-50%)}}
+.ctl button{transition:transform .15s,background .2s}
+.ctl button:active{transform:scale(.88)}
+.ctl button:hover{background:rgba(255,255,255,.18)}
+@media(prefers-reduced-motion:reduce){.playing .art,.playing .art::after,.playing .eq i,.playing .bar i,.playing .play,.playing .notes i,.playing .bar i::after,.radio.playing::before,.mid b#track.scroll span{animation:none}.playing .eq i{height:10px}}
 .mid{flex:1 1 220px;min-width:0}
 .mid b{display:block;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mid small{display:block;color:var(--mute);font-size:.82rem}
 .prog{display:flex;align-items:center;gap:.6rem;margin-top:.5rem;font-size:.75rem;color:var(--mute)}
-.bar{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.22);overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:var(--accent)}
+.bar{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.22);overflow:visible;position:relative}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:2px;position:relative}
+.bar i::after{content:"";position:absolute;right:-5px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 var(--accent);opacity:0;transition:opacity .3s}
+.playing .bar i::after{opacity:1;animation:dot 1.6s ease-out infinite}
+@keyframes dot{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 70%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
 .ctl{display:flex;align-items:center;gap:.5rem;margin:0 auto}
 .ctl button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
 .ctl .play{width:50px;height:50px;background:var(--accent);border-color:var(--accent);color:#1a0d08}
@@ -187,6 +209,7 @@ h1{padding:.14em .05em .2em;line-height:1.15}
   <div class="actions"><button id="chatBtn" aria-expanded="false">Live chat</button><button class="pill" id="rainBtn" aria-pressed="false">Rain</button></div>
   <p class="tag" id="tag"></p>
   <div class="radio" id="radio">
+    <div class="notes" aria-hidden="true"><i>♪</i><i>♫</i><i>♬</i></div>
     <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <div class="art" id="art" aria-hidden="true"></div>
     <div class="mid">
@@ -393,6 +416,26 @@ if(window.claude&&claude.use){
     r.onPeers(c=>{$('live').textContent=c.peers.filter(x=>x.kind==='viewer').length+' online'});
   }).catch(()=>{});
 }
+/* long song titles scroll sideways instead of being cut off */
+(function(){
+  const tr=$('track');let busy=false;
+  const fit=()=>{
+    if(busy)return;busy=true;
+    const first=tr.firstChild;
+    if(first&&first.nodeType===3){
+      tr.classList.remove('scroll');
+      if(tr.scrollWidth>tr.clientWidth+2){
+        const t=first.nodeValue,sp=document.createElement('span');
+        sp.append(t+'   \u2022   '+t+'   \u2022   ');
+        tr.textContent='';tr.append(sp);tr.classList.add('scroll');tr.title=t;
+      }
+    }
+    busy=false;
+  };
+  new MutationObserver(fit).observe(tr,{childList:true,characterData:true,subtree:true});
+  addEventListener('resize',()=>{if(!tr.classList.contains('scroll'))return;const t=tr.title;tr.textContent=t;fit()});
+  fit();
+})();
 /* floating pause/play button: visible while music plays, even when scrolled down */
 (function(){
   const fp=$('floatPause'),radio=$('radio');
@@ -422,6 +465,6 @@ tune(0);
 </script>
 <script src="config.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=8"></script>
+<script src="backend.js?v=9"></script>
 </body>
 </html>
