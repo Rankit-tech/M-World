@@ -232,7 +232,7 @@ dialog h2{margin-top:0}
   if(!cfg.url||!cfg.anonKey||!window.supabase){$('setup').hidden=false;return}
   const sb=supabase.createClient(cfg.url,cfg.anonKey);
   const say=(el,t,cls)=>{el.textContent=t;el.className='msg'+(cls?' '+cls:'')};
-  const THEMES={salon:'Salon',bus:'Bus Driver',papa:'Papa Ke Gaane',raju:'Raju Mistri',rap:'Rap Session'};
+  const THEMES={salon:'Pan Shop',bus:'Bus Driver',papa:'Papa Ke Gaane',raju:'Raju Mistri',rap:'Rap Session'};
   const NAMES=THEMES;
   ['theme','e_theme'].forEach(id=>Object.entries(THEMES).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v;$(id).append(o)}));
 

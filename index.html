@@ -205,7 +205,7 @@ h1{padding:.14em .05em .2em;line-height:1.15}
 </section>
 
 <div class="hero" id="hero">
-  <h1 id="title">सैलून</h1>
+  <h1 id="title">पान की दुकान</h1>
   <div class="actions"><button id="chatBtn" aria-expanded="false">Live chat</button><button class="pill" id="rainBtn" aria-pressed="false">Rain</button></div>
   <p class="tag" id="tag"></p>
   <div class="radio" id="radio">
@@ -235,7 +235,7 @@ h1{padding:.14em .05em .2em;line-height:1.15}
   <section id="faq">
     <h2>Questions, answered</h2>
     <details><summary>Is this radio free?</summary><p>Yes. It plays in your browser on phone or desktop, with no sign-up.</p></details>
-    <details><summary>What kind of music plays here?</summary><p>Old Hindi film songs and the sounds around them, grouped into stations by mood: the barber shop, the highway, dad's cassette shelf, the building site.</p></details>
+    <details><summary>What kind of music plays here?</summary><p>Old Hindi film songs and the sounds around them, grouped into stations by mood: the paan shop, the highway, dad's cassette shelf, the building site.</p></details>
     <details><summary>How do I change the station?</summary><p>Tap a station name at the top, or use Prev and Next on the radio.</p></details>
     <details><summary>What does the Rain button do?</summary><p>It starts a rainy-day effect with falling rain on the screen and the sound of a monsoon shower. Tap it again to stop.</p></details>
     <details><summary>How can I support the radio?</summary><p>Tap Support at the top. Your support keeps the radio free.</p></details>
@@ -250,10 +250,10 @@ h1{padding:.14em .05em .2em;line-height:1.15}
 
 <script>
 const S=[
-{id:"salon",tab:"Salon",hi:"सैलून",tag:"A 2000s hair-cutting shop, rebuilt as a radio",h2:"The barber shop radio",
- about:"Scissors, a battered radio in the corner, and the neighbourhood's gossip. This station plays 2000s Bollywood hits the way you heard them while waiting for a haircut.",
- feat:["2000s Bollywood|Chartbusters from the era of CD shops and FM.","Barber chatter|One-liners from the chair beside you.","Always on|Streams until you close the tab."],
- talk:"Hear the barber",q:["Bhaiya, thoda chhota... nahi, itna nahi!","Aaj kal ke ladke sab filmy hain.","Do minute baith jao, number aane wala hai."],
+{id:"salon",tab:"Pan Shop",hi:"पान की दुकान",tag:"A 2000s paan shop, rebuilt as a radio",h2:"The paan shop radio",
+ about:"A battered radio on the counter, the smell of fresh betel leaf, and the neighbourhood's gossip. This station plays 2000s Bollywood hits the way you heard them while waiting for your paan.",
+ feat:["2000s Bollywood|Chartbusters from the era of CD shops and FM.","Paan shop chatter|One-liners from the crowd at the counter.","Always on|Streams until you close the tab."],
+ talk:"Hear the paan wala",q:["Bhaiya, meetha paan lagana, zara kam chuna.","Aaj kal ke ladke sab filmy hain.","Do minute ruko, abhi lagata hoon."],
  tracks:[["Pyaar Ki Ek Kahani","Kids' favourites, 2000s"],["Kaho Naa Pyaar Hai","Hit-parade mix"],["Dil Chahta Hai","Waiting-room mix"]]},
 {id:"bus",tab:"Bus Driver",hi:"बस ड्राइवर",tag:"Non-stop trucker radio, all night on the highway",h2:"The highway raat playlist",
  about:"Built for long drives. Dhaba-style songs, a horn between tracks, and the highway going by outside the window.",
@@ -282,7 +282,7 @@ mb.onclick=e=>{e.stopPropagation();const o=tabs.hidden;tabs.hidden=!o;mb.setAttr
 document.addEventListener('click',e=>{if(!tabs.contains(e.target))closeMenu()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 const PHOTOS={salon:"assets/salon.jpg",bus:"assets/bus.jpg",papa:"assets/papa.jpg",rap:"assets/rap.jpg",raju:"assets/raju.jpg"};
-const EM={salon:'✂️',bus:'🚌',papa:'📼',raju:'🧱',rap:'🎤'};
+const EM={salon:'🍃',bus:'🚌',papa:'📼',raju:'🧱',rap:'🎤'};
 const PLAY='M8 5v14l11-7z',PAUSE='M6 5h4v14H6zm8 0h4v14h-4z';
 let sec=0,tm=null;
 function prog(){$('fill').style.width=(sec/210*100)+'%';$('t1').textContent=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')}
