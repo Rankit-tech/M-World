@@ -186,6 +186,57 @@ h1{padding:.14em .05em .2em;line-height:1.15}
 /* hide all scrollbars (scrolling still works) */
 *{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar{display:none;width:0;height:0}
+
+/* ===== Liquid Glass: translucent, light-bending surfaces with moving highlights ===== */
+:root{
+  --lg-fill:linear-gradient(135deg,rgba(255,255,255,.28),rgba(255,255,255,.05) 46%,rgba(255,255,255,.13));
+  --lg-edge:inset 0 1.5px 0 rgba(255,255,255,.75),inset 0 -1.5px 0 rgba(255,255,255,.16),inset 1.5px 0 0 rgba(255,255,255,.24),inset -1.5px 0 0 rgba(255,255,255,.1),inset 0 0 24px rgba(255,255,255,.07);
+  --lg-blur:blur(20px) saturate(210%) contrast(1.03);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+/* light blobs drifting behind everything, so the glass has something to bend */
+.scene{overflow:hidden}
+.scene::before,.scene::after{content:"";position:absolute;width:55vmax;height:55vmax;border-radius:50%;filter:blur(70px);opacity:.55;pointer-events:none}
+.scene::before{left:-18vmax;top:-14vmax;background:radial-gradient(circle,var(--accent),transparent 65%);animation:blobA 22s ease-in-out infinite alternate}
+.scene::after{right:-20vmax;bottom:-18vmax;background:radial-gradient(circle,var(--glow),transparent 65%);animation:blobB 26s ease-in-out infinite alternate}
+@keyframes blobA{to{transform:translate(28vmax,18vmax) scale(1.2)}}
+@keyframes blobB{to{transform:translate(-26vmax,-20vmax) scale(1.15)}}
+
+/* big surfaces */
+.radio,.chat,.drop,.feat div,details{background:var(--lg-fill),rgba(14,8,10,.30)!important;-webkit-backdrop-filter:var(--lg-blur)!important;backdrop-filter:var(--lg-blur)!important;border:1px solid rgba(255,255,255,.34)!important;box-shadow:var(--lg-edge),0 18px 48px rgba(0,0,0,.36)!important}
+.radio,.chat,.drop,.feat div,details{position:relative}
+.chat{position:fixed}.drop{position:absolute}
+.radio::after,.chat::after,.drop::after,.feat div::after,details::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;background:radial-gradient(260px circle at var(--mx,25%) var(--my,0%),rgba(255,255,255,.26),transparent 62%);opacity:.8;transition:opacity .3s}
+.chat>*{position:relative;z-index:1}.chat h3,.chat .pin,.chat #msgs,.chat .cform{position:relative;z-index:1}
+.feat div,details{border-radius:1.4rem!important;padding:1rem 1.2rem!important;margin:0 0 .7rem}
+.feat div{border-left:1px solid rgba(255,255,255,.34)!important}
+.feat div>*,details>*{position:relative;z-index:1}
+details summary{cursor:pointer;font-weight:600}
+.radio{border-radius:2rem!important}
+
+/* capsule buttons */
+#menuBtn,.pill,.links,.ctl button,#floatPause,#cclose,#csend{background:var(--lg-fill),rgba(255,255,255,.07)!important;-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);border:1px solid rgba(255,255,255,.36)!important;box-shadow:var(--lg-edge),0 6px 18px rgba(0,0,0,.28)!important}
+.links{border-radius:999px;padding:.15rem .3rem;margin-left:auto}
+.links a,.links button{background:transparent!important;box-shadow:none!important;border:0!important}
+#menuBtn,.pill,.ctl button,#floatPause,#cclose,#csend,#chatBtn,.ctl .play,footer button,.links a,.links button{transition:transform .35s var(--spring),background .25s,box-shadow .25s}
+#menuBtn:active,.pill:active,.ctl button:active,#floatPause:active,#chatBtn:active,.ctl .play:active,footer button:active,.links a:active,.links button:active{transform:scale(.92)}
+#menuBtn:hover,.pill:hover,.ctl button:hover,#floatPause:hover{transform:translateY(-1px) scale(1.04)}
+/* gold buttons become tinted glass */
+#chatBtn,.ctl .play,footer button{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 70%,#fff) 0%,var(--accent) 55%,color-mix(in srgb,var(--accent) 80%,#000) 100%)!important;border:1px solid rgba(255,255,255,.55)!important;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85),inset 0 -2px 6px rgba(0,0,0,.18),0 8px 22px color-mix(in srgb,var(--accent) 45%,transparent)!important}
+footer button{border-radius:999px}
+.live{background:var(--lg-fill),rgba(18,60,38,.45)!important;-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:var(--lg-edge)}
+.bub{background:var(--lg-fill),rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.26)!important;box-shadow:var(--lg-edge)}
+.cform input,#cin{background:rgba(0,0,0,.22)!important;border:1px solid rgba(255,255,255,.28)!important;box-shadow:inset 0 2px 6px rgba(0,0,0,.28),0 1px 0 rgba(255,255,255,.2)}
+/* dropdown opens with a springy pop */
+.drop:not([hidden]){animation:pop .4s var(--spring)}
+@keyframes pop{from{opacity:0;transform:scale(.86) translateY(-8px);transform-origin:top right}}
+#dlg[open]{animation:pop .5s var(--spring)}
+/* progress bar as a glass groove */
+.bar{background:rgba(0,0,0,.28)!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.25)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .radio,.chat,.drop,.feat div,details{background:rgba(24,12,14,.88)!important}
+}
+@media(prefers-reduced-motion:reduce){.scene::before,.scene::after{animation:none}.drop:not([hidden]),#dlg[open]{animation:none}}
 </style>
 </head>
 <body data-theme="salon">
@@ -470,6 +521,16 @@ if(window.claude&&claude.use){
     try{localStorage.setItem('mw_qr_at',String(Date.now()))}catch(e){}
     try{d.showModal()}catch(e){}
   });
+})();
+/* liquid glass: the light highlight follows your finger or mouse */
+(function(){
+  const sel='.radio,.chat,.drop,.feat div,details';
+  document.addEventListener('pointermove',e=>{
+    const el=e.target.closest&&e.target.closest(sel);if(!el)return;
+    const r=el.getBoundingClientRect();
+    el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+    el.style.setProperty('--my',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+  },{passive:true});
 })();
 tune(0);
 </script>

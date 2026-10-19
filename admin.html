@@ -90,6 +90,21 @@ dialog h2{margin-top:0}
 /* hide all scrollbars (scrolling still works) */
 *{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar{display:none;width:0;height:0}
+
+/* ===== Liquid Glass look ===== */
+:root{--lg-fill:linear-gradient(135deg,rgba(255,255,255,.2),rgba(255,255,255,.04) 46%,rgba(255,255,255,.1));--lg-edge:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -1.5px 0 rgba(255,255,255,.12),inset 1.5px 0 0 rgba(255,255,255,.18),inset -1.5px 0 0 rgba(255,255,255,.08);--lg-blur:blur(20px) saturate(200%);--spring:cubic-bezier(.34,1.56,.64,1)}
+body{background:radial-gradient(55% 40% at 12% 0%,rgba(212,175,55,.35),transparent 70%),radial-gradient(60% 45% at 95% 100%,#7a1f2b,transparent 70%),var(--bg)!important;background-attachment:fixed}
+.card{background:var(--lg-fill),rgba(14,8,10,.34)!important;-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);border:1px solid rgba(255,255,255,.3)!important;border-radius:1.5rem!important;box-shadow:var(--lg-edge),0 16px 40px rgba(0,0,0,.32)}
+input,select,textarea{background:rgba(0,0,0,.25)!important;border:1px solid rgba(255,255,255,.26)!important;border-radius:1rem!important;box-shadow:inset 0 2px 6px rgba(0,0,0,.3)}
+button{transition:transform .35s var(--spring),background .25s,box-shadow .25s;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 70%,#fff),var(--accent) 55%,color-mix(in srgb,var(--accent) 80%,#000));border:1px solid rgba(255,255,255,.5);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.8),inset 0 -2px 6px rgba(0,0,0,.18),0 6px 16px color-mix(in srgb,var(--accent) 35%,transparent)}
+button:active{transform:scale(.93)}
+button.ghost,.tabs button,.chips button,.ib{background:var(--lg-fill),rgba(255,255,255,.06)!important;-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);border:1px solid rgba(255,255,255,.32)!important;box-shadow:var(--lg-edge)!important;color:var(--ink)!important}
+.tabs button[aria-selected=true],.chips button[aria-pressed=true]{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 70%,#fff),var(--accent))!important;color:#1a0d08!important;border-color:rgba(255,255,255,.6)!important;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85),0 6px 16px color-mix(in srgb,var(--accent) 40%,transparent)!important}
+.tabs{background:linear-gradient(rgba(20,8,12,.55),transparent)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.menu{background:var(--lg-fill),rgba(20,10,12,.82)!important;-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);border:1px solid rgba(255,255,255,.32)!important;border-radius:1.1rem!important;box-shadow:var(--lg-edge),0 14px 36px rgba(0,0,0,.45)!important;animation:pop .35s var(--spring)}
+dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);border:1px solid rgba(255,255,255,.34)!important;border-radius:1.5rem!important;box-shadow:var(--lg-edge),0 24px 60px rgba(0,0,0,.5)}
+.wall,.tip,.stat{background:var(--lg-fill),rgba(255,255,255,.04)!important;border-color:rgba(255,255,255,.26)!important;box-shadow:var(--lg-edge);border-radius:1.2rem!important}
+@keyframes pop{from{opacity:0;transform:scale(.88) translateY(-6px)}}
 </style>
 </head>
 <body>
@@ -169,7 +184,7 @@ dialog h2{margin-top:0}
 
     <!-- Songs -->
     <section class="card" data-pane="songs" role="tabpanel" hidden>
-      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v9</small></h2>
+      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v10</small></h2>
       <p class="hint">Songs are ranked by listeners: the most listened song is #1 and plays first on the site. A listen counts when someone stays for 20 seconds, and a full play counts double. New songs start at the bottom and move up as people listen. Use the three dots on a song to move it to any position (#1, #2...), edit or delete it. A moved song stays pinned there until you unpin it.</p>
       <div class="msg err" id="rankwarn" hidden>Ranking is not set up yet. Run supabase/update-v2.sql in the Supabase SQL Editor.</div>
       <div class="chips" id="chips" role="group" aria-label="Filter by theme"></div>
