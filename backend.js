@@ -36,7 +36,9 @@
   function applyBg() {
     const s = songs[idx], art = $('art'), hb = $('herobg');
     const url = PHOTOS[S[cur].id];
-    if (url) { hb.style.backgroundImage = 'url("' + url + '")'; hb.hidden = false; } else hb.hidden = true;
+    if (!window.__wallPending) {
+      if (url) { hb.style.backgroundImage = 'url("' + url + '")'; hb.hidden = false; } else hb.hidden = true;
+    }
     if (s && s.wallpaper_path) {
       art.style.backgroundImage = 'url("' + sb.storage.from('wallpapers').getPublicUrl(s.wallpaper_path).data.publicUrl + '")';
       art.textContent = '';
@@ -228,17 +230,23 @@
   })();
 
   /* ---------- Custom wallpapers set by the admin ---------- */
+  window.__applyBg = applyBg;
   (async function () {
     try {
       const { data, error } = await sb.from('wallpapers').select('theme,file_path,updated_at');
-      if (error || !data) return;
-      data.forEach(w => {
-        const u = sb.storage.from('wallpapers').getPublicUrl(w.file_path).data.publicUrl;
-        PHOTOS[w.theme] = u + '?v=' + encodeURIComponent(w.updated_at);
-      });
-      applyBg();
+      if (!error && data) {
+        const custom = {};
+        data.forEach(w => {
+          custom[w.theme] = sb.storage.from('wallpapers').getPublicUrl(w.file_path).data.publicUrl + '?v=' + encodeURIComponent(w.updated_at);
+        });
+        Object.keys(DEFAULT_PHOTOS).forEach(k => { PHOTOS[k] = custom[k] || DEFAULT_PHOTOS[k]; });
+        try { localStorage.setItem('mw_walls', JSON.stringify(custom)); } catch (e) {}
+      }
     } catch (e) {}
+    window.__wallPending = false;
+    applyBg();
   })();
+
 
   loadTheme();
 })();

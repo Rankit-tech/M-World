@@ -249,6 +249,7 @@ h1{padding:.14em .05em .2em;line-height:1.15}
 <button id="floatPause" hidden aria-label="Pause music"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg><span>Pause music</span></button>
 <dialog id="dlg"><div class="heart" aria-hidden="true" style="font-size:1.6rem">❤️</div><p class="dt" tabindex="-1" autofocus>These old songs stay alive because of you</p><p class="ds">M. World is run by one person. Every song, every server bill, every late night. If these songs made your day even a little lighter, please send whatever you can and help keep this radio going. Your small gift means the world to me.</p><p class="perk">✨ Supporters keep M. World <b>ad-free for life</b>. No ads, ever.</p><img class="qr" alt="UPI payment QR code" src="assets/qr.png"><p class="ds2">Scan with any UPI app. Thank you 🙏</p><button id="close">Maybe later</button></dialog>
 
+<script src="config.js?v=3"></script>
 <script>
 const S=[
 {id:"salon",tab:"Pan Shop",hi:"पान\nदुकान",tag:"A 2000s paan shop, rebuilt as a radio",h2:"The paan shop radio",
@@ -283,6 +284,14 @@ mb.onclick=e=>{e.stopPropagation();const o=tabs.hidden;tabs.hidden=!o;mb.setAttr
 document.addEventListener('click',e=>{if(!tabs.contains(e.target))closeMenu()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 const PHOTOS={salon:"assets/salon.jpg",bus:"assets/bus.jpg",papa:"assets/papa.jpg",rap:"assets/rap.jpg",raju:"assets/raju.jpg"};
+const DEFAULT_PHOTOS=Object.assign({},PHOTOS);
+/* Wallpapers the admin changed are remembered, so a refresh shows the right photo at once (no old photo flashing first). */
+window.__wallPending=false;
+try{
+  const c=JSON.parse(localStorage.getItem('mw_walls')||'null');
+  if(c&&typeof c==='object')Object.assign(PHOTOS,c);
+  else if(window.MWORLD&&MWORLD.url){window.__wallPending=true;setTimeout(()=>{if(window.__wallPending){window.__wallPending=false;if(window.__applyBg)window.__applyBg();else{const hb=$('herobg'),p=PHOTOS[S[cur].id];if(p){hb.style.backgroundImage='url("'+p+'")';hb.hidden=false}}}},2500)}
+}catch(e){}
 const EM={salon:'🍃',bus:'🚌',papa:'📼',raju:'🧱',rap:'🎤'};
 const PLAY='M8 5v14l11-7z',PAUSE='M6 5h4v14H6zm8 0h4v14h-4z';
 let sec=0,tm=null;
@@ -307,7 +316,7 @@ function tune(i,dir){
   $('title').textContent=s.hi;$('tag').textContent=s.tag;$('h2').textContent=s.h2;$('about').textContent=s.about;
   $('feat').innerHTML=s.feat.map(f=>{const[a,b]=f.split('|');return`<div><b>${a}</b>${b}</div>`}).join('');
   
-  $('art').textContent=EM[s.id];{const nr=s.id==='rap';$('rainBtn').hidden=nr;if(nr&&rainOn)setRain(false)}{const hb=$('herobg');if(PHOTOS[s.id]){hb.style.backgroundImage='url("'+PHOTOS[s.id]+'")';hb.hidden=false}else hb.hidden=true}sec=0;prog();
+  $('art').textContent=EM[s.id];{const nr=s.id==='rap';$('rainBtn').hidden=nr;if(nr&&rainOn)setRain(false)}{const hb=$('herobg');if(PHOTOS[s.id]&&!window.__wallPending){hb.style.backgroundImage='url("'+PHOTOS[s.id]+'")';hb.hidden=false}else hb.hidden=true}sec=0;prog();
   const t=s.tracks[0];$('track').textContent=t[0];$('artist').textContent=t[1];
   document.title=s.tab+" | M. World";
   if(playing)hiss(350);
@@ -464,8 +473,7 @@ if(window.claude&&claude.use){
 })();
 tune(0);
 </script>
-<script src="config.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=9"></script>
+<script src="backend.js?v=10"></script>
 </body>
 </html>
