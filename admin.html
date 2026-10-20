@@ -184,7 +184,7 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
 
     <!-- Songs -->
     <section class="card" data-pane="songs" role="tabpanel" hidden>
-      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v10</small></h2>
+      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v11</small></h2>
       <p class="hint">Songs are ranked by listeners: the most listened song is #1 and plays first on the site. A listen counts when someone stays for 20 seconds, and a full play counts double. New songs start at the bottom and move up as people listen. Use the three dots on a song to move it to any position (#1, #2...), edit or delete it. A moved song stays pinned there until you unpin it.</p>
       <div class="msg err" id="rankwarn" hidden>Ranking is not set up yet. Run supabase/update-v2.sql in the Supabase SQL Editor.</div>
       <div class="chips" id="chips" role="group" aria-label="Filter by theme"></div>
@@ -586,14 +586,14 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
     const sm=document.createElement('div');sm.className='sm';
     const b=document.createElement('b');b.textContent=s.title;
     const sub=document.createElement('small');
-    sub.textContent=[s.artist,s.pin_rank!=null?'pinned':null,s.trend_rank!=null?'trending #'+s.trend_rank:null,s.wallpaper_path?'has thumbnail':null,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
+    sub.textContent=[s.artist,s.pin_rank===1?'starts first (pinned)':s.pin_rank!=null?'pinned':null,s.trend_rank!=null?'trending #'+s.trend_rank:null,s.wallpaper_path?'has thumbnail':null,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
     sm.append(b,sub);
     const pb=iconBtn('play','Preview');pb.onclick=()=>preview(s,pb);
     const db=iconBtn('dots','More options for '+s.title);
     db.onclick=()=>openMenu(db,[
       {label:'Move up',fn:()=>moveSong(s,s.rank-1)},
       {label:'Move down',fn:()=>moveSong(s,s.rank+1)},
-      {label:'Make #1',fn:()=>moveSong(s,1)},
+      {label:'Always start with this song',fn:()=>moveSong(s,1)},
       {label:'Move to position\u2026',fn:()=>{const v=prompt('New position in '+(THEMES[s.theme]||s.theme)+' (1 = top):',s.rank);if(v!==null)moveSong(s,parseInt(v,10))}},
       ...(s.pin_rank!=null?[{label:'Unpin (back to automatic rank)',fn:()=>unpinSong(s)}]:[]),
       {label:s.wallpaper_path?'Change thumbnail of this song':'Set thumbnail for this song',fn:()=>pickSongWall(s)},
