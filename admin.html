@@ -52,9 +52,14 @@ button:disabled{opacity:.5;cursor:default}
 .wall b{display:block;margin-bottom:.4rem}
 .wall .acts{display:flex;gap:.4rem;flex-wrap:wrap}
 .wall button{padding:.4rem .8rem;font-size:.85rem}
-.wall .vis{width:100%;margin-bottom:.5rem;text-align:left}
-.wall .vis.pub{background:rgba(123,224,160,.15);color:#7be0a0;border:1px solid #7be0a0}
-.wall .vis.priv{background:rgba(255,138,138,.15);color:#ff8a8a;border:1px solid #ff8a8a}
+.wall .visrow{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.55rem .8rem;margin-bottom:.5rem;border-radius:1rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
+.wall .vtx b{display:block;font-weight:600}.wall .vtx small{color:var(--mute);font-size:.78rem}
+button.ios{flex:none;position:relative;width:51px;height:31px;padding:0;border-radius:999px!important;border:0!important;background:rgba(120,120,128,.55)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)!important;transition:background .3s!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+button.ios::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.35),0 1px 1px rgba(0,0,0,.2);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+button.ios[aria-checked=true]{background:#34c759!important}
+button.ios[aria-checked=true]::after{transform:translateX(20px)}
+button.ios:active::after{width:33px}
+button.ios[aria-checked=true]:active::after{transform:translateX(14px)}
 .tip{border-left:3px solid var(--accent);background:rgba(255,255,255,.05);border-radius:.4rem;padding:.6rem .8rem;margin:.5rem 0;font-size:.92rem}
 .tip.good{border-color:#7be0a0}.tip.warn{border-color:#ffb86b}
 .tip b{display:block}
@@ -184,7 +189,7 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
 
     <!-- Songs -->
     <section class="card" data-pane="songs" role="tabpanel" hidden>
-      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v11</small></h2>
+      <h2>Songs <small style="font-weight:400;color:var(--mute);font-size:.7rem">admin v12</small></h2>
       <p class="hint">Songs are ranked by listeners: the most listened song is #1 and plays first on the site. A listen counts when someone stays for 20 seconds, and a full play counts double. New songs start at the bottom and move up as people listen. Use the three dots on a song to move it to any position (#1, #2...), edit or delete it. A moved song stays pinned there until you unpin it.</p>
       <div class="msg err" id="rankwarn" hidden>Ranking is not set up yet. Run supabase/update-v2.sql in the Supabase SQL Editor.</div>
       <div class="chips" id="chips" role="group" aria-label="Filter by theme"></div>
@@ -194,7 +199,7 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
     <!-- Wallpapers -->
     <section class="card" data-pane="wall" role="tabpanel" hidden>
       <h2>Wallpapers and visibility</h2>
-      <p class="hint">Make a whole theme public or private (a private theme is hidden from visitors, you still see it). Change the background photo of each theme. Photos are shrunk automatically to save space. Use a wide photo (landscape). "Reset" brings back the original photo.</p>
+      <p class="hint">Use the switch to make a whole theme public (green) or private (grey). A private theme is hidden from visitors. You still see it while signed in as admin; to see the site like a visitor, open it with ?visitor at the end of the address. Change the background photo of each theme. Photos are shrunk automatically to save space. Use a wide photo (landscape). "Reset" brings back the original photo.</p>
       <div class="msg" id="wmsg"></div>
       <div id="walls" class="walls"></div>
     </section>
@@ -405,16 +410,20 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
       acts.append(up,inp);
       if(w){const rs=document.createElement('button');rs.type='button';rs.className='ghost';rs.textContent='Reset';rs.onclick=()=>resetWall(k);acts.append(rs)}
       const pub=vis[k]!==false;
-      const vb=document.createElement('button');vb.type='button';vb.className=pub?'vis pub':'vis priv';
-      vb.textContent=pub?'Public \u2013 everyone can see it':'Private \u2013 only you can see it';
-      vb.setAttribute('aria-pressed',String(!pub));
-      vb.onclick=()=>setVisible(k,!pub);
-      c.append(pic,b,vb,acts);box.append(c);
+      const row=document.createElement('div');row.className='visrow';
+      const tx=document.createElement('div');tx.className='vtx';
+      const t1=document.createElement('b');t1.textContent=pub?'Public':'Private';
+      const t2=document.createElement('small');t2.textContent=pub?'Everyone can see this theme':'Hidden from visitors';
+      tx.append(t1,t2);
+      const sw=document.createElement('button');sw.type='button';sw.className='ios';sw.setAttribute('role','switch');
+      sw.setAttribute('aria-checked',String(pub));sw.setAttribute('aria-label',THEMES[k]+' is visible to everyone');
+      sw.onclick=()=>setVisible(k,!pub);
+      row.append(tx,sw);
+      c.append(pic,b,row,acts);box.append(c);
     });
   }
   async function setVisible(k,pub){
     const msg=pub?'Make "'+THEMES[k]+'" public? Everyone will see this station and its songs.':'Make "'+THEMES[k]+'" private? Visitors will no longer see this station or its songs. You will still see it when you are signed in as admin.';
-    if(!confirm(msg))return;
     const r=await sb.from('theme_settings').upsert({theme:k,is_public:pub,updated_at:new Date().toISOString()});
     if(r.error){say($('wmsg'),/theme_settings/.test(r.error.message)?'Run supabase/update-v7.sql in the Supabase SQL Editor first.':'Could not change it: '+r.error.message,'err');return}
     say($('wmsg'),THEMES[k]+' is now '+(pub?'public':'private')+'. Visitors see the change on their next refresh.','ok');

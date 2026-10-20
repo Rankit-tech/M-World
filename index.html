@@ -374,6 +374,10 @@ function hiss(ms){
   }catch(e){}
 }
 const HIDDEN=new Set();
+/* Private themes are remembered, so they stay hidden from the very first moment (no flash before the server answers). */
+function syncMenu(){[...tabs.children].forEach((b,k)=>{b.hidden=HIDDEN.has(S[k].id)})}
+try{(JSON.parse(localStorage.getItem('mw_priv')||'[]')).forEach(id=>HIDDEN.add(id))}catch(e){}
+syncMenu();
 function tune(i,dir){
   dir=dir||1;cur=(i+S.length)%S.length;
   for(let g=0;HIDDEN.has(S[cur].id)&&g<S.length;g++)cur=(cur+dir+S.length)%S.length;
@@ -551,6 +555,6 @@ if(window.claude&&claude.use){
 tune(0);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=11"></script>
+<script src="backend.js?v=12"></script>
 </body>
 </html>

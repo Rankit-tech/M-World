@@ -221,26 +221,32 @@
     }
   } catch (e) {}
 
-  /* ---------- Private themes (hidden from visitors, visible to the admin) ---------- */
+  /* ---------- Private themes (hidden from visitors; the signed-in admin still sees them) ---------- */
   (async function () {
     try {
       const { data, error } = await sb.from('theme_settings').select('theme,is_public');
       if (error || !data) return;
       let admin = false;
-      try {
-        const ses = await sb.auth.getSession();
-        if (ses.data && ses.data.session) { const r = await sb.rpc('is_admin'); admin = r.data === true; }
-      } catch (e) {}
+      // Add ?visitor to the address to see the site exactly as a visitor does, even when signed in as admin.
+      if (!/(^|[?&])visitor(=|&|$)/.test(location.search)) {
+        try {
+          const ses = await sb.auth.getSession();
+          if (ses.data && ses.data.session) { const r = await sb.rpc('is_admin'); admin = r.data === true; }
+        } catch (e) {}
+      }
       const priv = data.filter(t => t.is_public === false).map(t => t.theme);
-      priv.forEach(id => { if (!admin) HIDDEN.add(id); });
+      try { localStorage.setItem('mw_priv', JSON.stringify(priv)); } catch (e) {}
+      HIDDEN.clear();
+      if (!admin) priv.forEach(id => HIDDEN.add(id));
+      syncMenu();
       [...document.getElementById('tabs').children].forEach((b, k) => {
-        const isPriv = priv.includes(S[k].id);
-        b.hidden = isPriv && !admin;
-        if (isPriv && admin && !/private/.test(b.textContent)) b.textContent += ' (private)';
+        b.textContent = b.textContent.replace(/ \(private\)$/, '');
+        if (admin && priv.includes(S[k].id)) b.textContent += ' (private)';
       });
       if (HIDDEN.has(S[cur].id)) tune(cur, 1);
     } catch (e) {}
   })();
+
 
   /* ---------- Custom wallpapers set by the admin ---------- */
   window.__applyBg = applyBg;
