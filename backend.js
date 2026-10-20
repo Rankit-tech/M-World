@@ -81,6 +81,19 @@
     h('nexttrack', () => { if (songs.length) load(idx + 1, true); });
     h('previoustrack', () => { if (songs.length) load(idx - 1, true); });
   }
+  // Every time the site opens (or is refreshed) the playlist is shuffled, and the first song
+  // is never the same one as last time, so listeners hear something different each visit.
+  function shuffled(list, themeId) {
+    const a = list.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    const key = 'mw_last_' + themeId;
+    try {
+      const last = localStorage.getItem(key);
+      if (a.length > 1 && a[0].id === last) { const k = 1 + Math.floor(Math.random() * (a.length - 1)); [a[0], a[k]] = [a[k], a[0]]; }
+      localStorage.setItem(key, a[0].id);
+    } catch (e) {}
+    return a;
+  }
   async function loadTheme() {
     on = false; audio.pause(); audio.removeAttribute('src'); setIcon(false);
     songs = []; idx = 0;
@@ -94,7 +107,7 @@
       $('fill').style.width = '0%'; $('t1').textContent = '0:00'; $('t2').textContent = '0:00';
       return;
     }
-    songs = data; load(0, false);
+    songs = shuffled(data, id); load(0, false);
   }
 
   const origTune = tune;
