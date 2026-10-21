@@ -529,6 +529,18 @@ if(window.claude&&claude.use){
     if(t.closest('a,button,input,textarea,select,dialog,.radio,.chat,header,#aboutus,#faq,footer,.drop'))return;
     if(t===document.body||t===document.documentElement||t.id==='hero'||t.id==='herobg'||t.id==='scene'||t.id==='title'||t.id==='tag'||t.classList.contains('hero'))$('play').click();
   });
+  /* keyboard: Space or K = play/pause, Left/Right = previous/next song */
+  document.addEventListener('keydown',e=>{
+    if(e.ctrlKey||e.metaKey||e.altKey)return;
+    const t=e.target;
+    if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+    if(document.querySelector('dialog[open]'))return;
+    if(e.code==='Space'||e.key==='k'||e.key==='K'){
+      if(t&&t.tagName==='BUTTON'&&e.code==='Space')return; /* let a focused button use its own Space */
+      e.preventDefault();$('play').click();
+    }else if(e.key==='ArrowRight'&&$('next')){$('next').click()}
+    else if(e.key==='ArrowLeft'&&$('prev')){$('prev').click()}
+  });
   /* coming back to the tab/app: show the support QR (at most once every 10 minutes) */
   let hiddenAt=0;
   document.addEventListener('visibilitychange',()=>{
