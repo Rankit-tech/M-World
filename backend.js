@@ -138,6 +138,10 @@
     if (audio.duration) $('fill').style.width = (audio.currentTime / audio.duration * 100) + '%';
     $('t1').textContent = fmt(audio.currentTime);
   });
+  // The buttons always follow what the audio is really doing, even when the phone pauses it
+  // itself (a call, another app, a headset being unplugged, the lock screen).
+  audio.addEventListener('pause', () => { if (!audio.ended) { on = false; setIcon(false); } });
+  audio.addEventListener('playing', () => { on = true; setIcon(true); });
   audio.addEventListener('loadedmetadata', () => { $('t2').textContent = fmt(audio.duration); });
   audio.addEventListener('ended', () => {
     if (!songs.length) return;
