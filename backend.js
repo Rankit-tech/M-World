@@ -230,9 +230,9 @@
     try {
       const { data, error } = await sb.from('theme_settings').select('theme,is_public');
       if (error || !data) return;
+      // Private themes are hidden from everyone, admin included. Add ?preview to the address to see them as the admin.
       let admin = false;
-      // Add ?visitor to the address to see the site exactly as a visitor does, even when signed in as admin.
-      if (!/(^|[?&])visitor(=|&|$)/.test(location.search)) {
+      if (/(^|[?&])preview(=|&|$)/.test(location.search)) {
         try {
           const ses = await sb.auth.getSession();
           if (ses.data && ses.data.session) { const r = await sb.rpc('is_admin'); admin = r.data === true; }
