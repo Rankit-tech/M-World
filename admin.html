@@ -423,7 +423,7 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
     });
   }
   async function setVisible(k,pub){
-    const msg=pub?'Make "'+THEMES[k]+'" public? Everyone will see this station and its songs.':'Make "'+THEMES[k]+'" private? Visitors will no longer see this station or its songs. You will still see it when you are signed in as admin.';
+    const msg=pub?'Make "'+THEMES[k]+'" public? Everyone will see this station and its songs.':'Make "'+THEMES[k]+'" private? Visitors will no longer see this station or its songs. Add ?preview to the site address to view it yourself.';
     const r=await sb.from('theme_settings').upsert({theme:k,is_public:pub,updated_at:new Date().toISOString()});
     if(r.error){say($('wmsg'),/theme_settings/.test(r.error.message)?'Run supabase/update-v7.sql in the Supabase SQL Editor first.':'Could not change it: '+r.error.message,'err');return}
     say($('wmsg'),THEMES[k]+' is now '+(pub?'public':'private')+'. Visitors see the change on their next refresh.','ok');
