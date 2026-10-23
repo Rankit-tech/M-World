@@ -230,7 +230,7 @@
     try {
       const { data, error } = await sb.from('theme_settings').select('theme,is_public');
       const ver = document.getElementById('ver');
-      if (error || !data) { if (ver) ver.textContent = 'site v16 · private list not loaded: ' + (error ? error.message : 'no data'); return; }
+      if (error || !data) { if (ver) ver.textContent = 'site v17 · private list not loaded: ' + (error ? error.message : 'no data'); return; }
       // Private themes are hidden from everyone, admin included. Add ?preview to the address to see them as the admin.
       let admin = false;
       if (/(^|[?&])preview(=|&|$)/.test(location.search)) {
@@ -248,7 +248,7 @@
         b.textContent = b.textContent.replace(/ \(private\)$/, '');
         if (admin && priv.includes(S[k].id)) b.textContent += ' (private)';
       });
-      { const v = document.getElementById('ver'); if (v) v.textContent = 'site v16 · private themes: ' + (priv.join(', ') || 'none'); }
+      { const v = document.getElementById('ver'); if (v) v.textContent = 'site v17 · private themes: ' + (priv.join(', ') || 'none'); }
       if (HIDDEN.has(S[cur].id)) tune(cur, 1);
     } catch (e) {}
   })();
