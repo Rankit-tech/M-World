@@ -95,6 +95,80 @@
     h('nexttrack', () => { if (songs.length) load(idx + 1, true); });
     h('previoustrack', () => { if (songs.length) load(idx - 1, true); });
   }
+  // ---------- Share card: a picture of the current song to send on WhatsApp / Instagram ----------
+  function loadImg(src) {
+    return new Promise(res => {
+      if (!src) return res(null);
+      const im = new Image(); im.crossOrigin = 'anonymous';
+      im.onload = () => res(im); im.onerror = () => res(null); im.src = src;
+    });
+  }
+  function cover(ctx, im, x, y, w, h) {
+    const r = Math.max(w / im.width, h / im.height), dw = im.width * r, dh = im.height * r;
+    ctx.drawImage(im, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+  }
+  function wrap(ctx, text, x, y, maxW, lh, maxLines) {
+    const words = String(text).split(/\s+/); let line = '', n = 0;
+    for (let i = 0; i < words.length; i++) {
+      const t = line ? line + ' ' + words[i] : words[i];
+      if (ctx.measureText(t).width > maxW && line) {
+        if (++n >= maxLines) { ctx.fillText(line.replace(/\s*\S*$/, '') + '…', x, y); return y + lh; }
+        ctx.fillText(line, x, y); y += lh; line = words[i];
+      } else line = t;
+    }
+    ctx.fillText(line, x, y); return y + lh;
+  }
+  async function makeCard() {
+    const sg = songs[idx]; if (!sg) return null;
+    const W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const c = cv.getContext('2d');
+    try { await document.fonts.load('700 60px Poppins'); await document.fonts.load('500 36px Poppins'); } catch (e) {}
+    const themeUrl = PHOTOS[S[cur].id] ? new URL(PHOTOS[S[cur].id], location.href).href : '';
+    const thumbUrl = sg.wallpaper_path ? sb.storage.from('wallpapers').getPublicUrl(sg.wallpaper_path).data.publicUrl : '';
+    const [bg, thumb] = await Promise.all([loadImg(themeUrl), loadImg(thumbUrl)]);
+    c.fillStyle = '#1a0d08'; c.fillRect(0, 0, W, H);
+    if (bg) cover(c, bg, 0, 0, W, H);
+    const g = c.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, 'rgba(10,5,5,.55)'); g.addColorStop(.5, 'rgba(10,5,5,.72)'); g.addColorStop(1, 'rgba(10,5,5,.92)');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    // cover art
+    const sz = 520, x0 = (W - sz) / 2, y0 = 190;
+    c.save(); c.beginPath(); c.roundRect(x0, y0, sz, sz, 56); c.clip();
+    if (thumb) cover(c, thumb, x0, y0, sz, sz);
+    else { c.fillStyle = '#3a1f12'; c.fillRect(x0, y0, sz, sz); c.font = '260px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(EM[S[cur].id] || '♪', W / 2, y0 + sz / 2 + 10); }
+    c.restore();
+    c.lineWidth = 4; c.strokeStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.roundRect(x0, y0, sz, sz, 56); c.stroke();
+    c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.fillStyle = '#fff';
+    c.font = '500 34px Poppins, sans-serif'; c.globalAlpha = .8; c.fillText('NOW PLAYING', W / 2, 140); c.globalAlpha = 1;
+    c.font = '700 60px Poppins, sans-serif';
+    let y = wrap(c, sg.title, W / 2, y0 + sz + 110, W - 160, 76, 3);
+    c.font = '500 40px Poppins, sans-serif'; c.globalAlpha = .85;
+    c.fillText(sg.artist || S[cur].tab, W / 2, y + 10); c.globalAlpha = 1;
+    // footer
+    c.font = '700 54px Poppins, sans-serif'; c.fillStyle = '#f5c66b'; c.fillText('M. World', W / 2, H - 120);
+    c.font = '500 30px Poppins, sans-serif'; c.fillStyle = '#fff'; c.globalAlpha = .8;
+    c.fillText(location.host + location.pathname.replace(/[^/]*$/, ''), W / 2, H - 70); c.globalAlpha = 1;
+    return new Promise(res => cv.toBlob(res, 'image/png'));
+  }
+  $('shareBtn').onclick = async () => {
+    const btn = $('shareBtn'); if (!songs.length) return;
+    btn.disabled = true;
+    const link = location.origin + location.pathname;
+    const text = '♪ ' + songs[idx].title + ' on M. World';
+    try {
+      const blob = await makeCard();
+      const file = blob && new File([blob], 'm-world-now-playing.png', { type: 'image/png' });
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: text + '\n' + link, title: 'M. World' });
+      } else if (blob) {
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'm-world-now-playing.png';
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        try { await navigator.clipboard.writeText(text + '\n' + link); } catch (e) {}
+      }
+    } catch (e) { /* the person closed the share sheet */ }
+    btn.disabled = false;
+  };
+
   // Every time the site opens (or is refreshed) the playlist is shuffled, and the first song
   // is never the same one as last time, so listeners hear something different each visit.
   function shuffled(list, themeId) {
@@ -244,7 +318,7 @@
     try {
       const { data, error } = await sb.from('theme_settings').select('theme,is_public');
       const ver = document.getElementById('ver');
-      if (error || !data) { if (ver) ver.textContent = 'site v18 · private list not loaded: ' + (error ? error.message : 'no data'); return; }
+      if (error || !data) { if (ver) ver.textContent = 'site v19 · private list not loaded: ' + (error ? error.message : 'no data'); return; }
       // Private themes are hidden from everyone, admin included. Add ?preview to the address to see them as the admin.
       let admin = false;
       if (/(^|[?&])preview(=|&|$)/.test(location.search)) {
@@ -262,7 +336,7 @@
         b.textContent = b.textContent.replace(/ \(private\)$/, '');
         if (admin && priv.includes(S[k].id)) b.textContent += ' (private)';
       });
-      { const v = document.getElementById('ver'); if (v) v.textContent = 'site v18 · private themes: ' + (priv.join(', ') || 'none'); }
+      { const v = document.getElementById('ver'); if (v) v.textContent = 'site v19 · private themes: ' + (priv.join(', ') || 'none'); }
       if (HIDDEN.has(S[cur].id)) tune(cur, 1);
     } catch (e) {}
   })();
