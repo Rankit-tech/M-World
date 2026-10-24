@@ -15,6 +15,7 @@
   /* ---------- Songs ---------- */
   const audio = new Audio();
   audio.preload = 'auto';
+  window.__mwAudio = audio;
   audio.setAttribute('controlsList', 'nodownload noplaybackrate');
   audio.disableRemotePlayback = true;
   document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('.radio, #floatPause')) e.preventDefault(); });
@@ -22,7 +23,19 @@
   let songs = [], idx = 0, on = false;
 
   const fmt = s => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-  const urlOf = p => sb.storage.from('songs').getPublicUrl(p).data.publicUrl;
+  // Song files are private after supabase/update-v8.sql: the site asks for short-lived signed links.
+  // If that is not set up yet (or signing fails) it falls back to the plain public link, so music never breaks.
+  let signed = {};
+  const publicUrl = p => sb.storage.from('songs').getPublicUrl(p).data.publicUrl;
+  const urlOf = p => signed[p] || publicUrl(p);
+  async function signAll(list) {
+    try {
+      const paths = list.map(x => x.file_path);
+      const { data, error } = await sb.storage.from('songs').createSignedUrls(paths, 21600);
+      if (error || !data) return;
+      data.forEach(d => { if (d.signedUrl && !d.error) signed[d.path] = d.signedUrl; });
+    } catch (e) {}
+  }
   function setIcon(isOn) {
     $('play').querySelector('path').setAttribute('d', isOn ? PAUSE : PLAY);
     $('play').setAttribute('aria-label', isOn ? 'Pause' : 'Play');
@@ -55,6 +68,7 @@
   function load(i, autoplay) {
     listened = 0; lastT = null; gotListen = false; gotDone = false;
     idx = (i + songs.length) % songs.length;
+    delete audio.dataset.retried;
     audio.src = urlOf(songs[idx].file_path);
     show();
     $('fill').style.width = '0%'; $('t1').textContent = '0:00'; $('t2').textContent = '0:00';
@@ -169,6 +183,33 @@
     btn.disabled = false;
   };
 
+  // ---------- Song requests ----------
+  (function () {
+    const dlg = $('rdlg'); if (!dlg) return;
+    $('reqBtn').onclick = () => {
+      $('rtheme').innerHTML = '<option value="">Any station</option>' + S.filter(t => !HIDDEN.has(t.id))
+        .map(t => '<option value="' + t.id + '"' + (t.id === S[cur].id ? ' selected' : '') + '>' + t.tab + '</option>').join('');
+      $('rmsg').textContent = ''; dlg.showModal();
+    };
+    $('rcancel').onclick = () => dlg.close();
+    $('rform').addEventListener('submit', async e => {
+      e.preventDefault();
+      const title = $('rtitle').value.trim(); if (!title) return;
+      let n = 0, day = new Date().toDateString();
+      try { const o = JSON.parse(localStorage.getItem('mw_req') || '{}'); n = o.d === day ? o.n : 0; } catch (x) {}
+      if (n >= 5) { $('rmsg').textContent = 'That is enough for today. Please come back tomorrow.'; return; }
+      $('rsend').disabled = true;
+      const { error } = await sb.from('song_requests').insert({
+        title: title.slice(0, 120), artist: $('rartist').value.trim().slice(0, 80) || null,
+        theme: $('rtheme').value || null, visitor: vid });
+      $('rsend').disabled = false;
+      if (error) { $('rmsg').textContent = 'Could not send right now. Please try again later.'; return; }
+      try { localStorage.setItem('mw_req', JSON.stringify({ d: day, n: n + 1 })); } catch (x) {}
+      $('rtitle').value = ''; $('rartist').value = '';
+      $('rmsg').textContent = 'Thank you! Your request was sent.';
+    });
+  })();
+
   // Every time the site opens (or is refreshed) the playlist is shuffled, and the first song
   // is never the same one as last time, so listeners hear something different each visit.
   function shuffled(list, themeId) {
@@ -195,6 +236,8 @@
       $('fill').style.width = '0%'; $('t1').textContent = '0:00'; $('t2').textContent = '0:00';
       return;
     }
+    await signAll(data);
+    if (S[cur].id !== id) return;
     songs = shuffled(data, id); load(0, false);
   }
 
@@ -238,6 +281,13 @@
   });
   audio.addEventListener('error', () => {
     if (!audio.getAttribute('src')) return;
+    // A signed link can expire if the site stays open for hours: get fresh links and retry once.
+    if (songs[idx] && !audio.dataset.retried) {
+      audio.dataset.retried = '1';
+      const want = on;
+      signAll(songs).then(() => { const t = audio.currentTime; audio.src = urlOf(songs[idx].file_path); try { audio.currentTime = t; } catch (e) {} if (want) audio.play().catch(() => {}); });
+      return;
+    }
     on = false; setIcon(false); $('artist').textContent = 'Could not load this song';
   });
   const bar = document.querySelector('.bar');
@@ -317,8 +367,7 @@
   (async function () {
     try {
       const { data, error } = await sb.from('theme_settings').select('theme,is_public');
-      const ver = document.getElementById('ver');
-      if (error || !data) { if (ver) ver.textContent = 'site v19 · private list not loaded: ' + (error ? error.message : 'no data'); return; }
+      if (error || !data) return;
       // Private themes are hidden from everyone, admin included. Add ?preview to the address to see them as the admin.
       let admin = false;
       if (/(^|[?&])preview(=|&|$)/.test(location.search)) {
@@ -336,7 +385,6 @@
         b.textContent = b.textContent.replace(/ \(private\)$/, '');
         if (admin && priv.includes(S[k].id)) b.textContent += ' (private)';
       });
-      { const v = document.getElementById('ver'); if (v) v.textContent = 'site v19 · private themes: ' + (priv.join(', ') || 'none'); }
       if (HIDDEN.has(S[cur].id)) tune(cur, 1);
     } catch (e) {}
   })();

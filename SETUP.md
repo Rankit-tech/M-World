@@ -68,3 +68,10 @@ GitHub Pages on karo: Settings > Pages > Deploy from a branch > `main` / root.
 
 ## Update v7: theme ko Private / Public karna
 `supabase/update-v7.sql` ko SQL Editor mein ek baar run karo (update-v6.sql ke baad). Admin ke Wallpapers tab mein har theme par Public/Private button hai. Private theme visitors ko nahi dikhti (menu se gayab, gaane bhi nahi). Admin sign-in hone par wo "(private)" likhi hui dikhti hai.
+
+## Update v8 (private song files) and v9 (song requests)
+
+Run these in the Supabase SQL Editor, in order, after update-v7.sql:
+
+1. `supabase/update-v8.sql`: song files stop being reachable by a plain public link. The site uses links that expire after a few hours. Songs of private themes can no longer be fetched by visitors. If you skip this file, everything still works exactly as before.
+2. `supabase/update-v9.sql`: adds the "Request a song" form for visitors and the Requests tab in the admin panel.

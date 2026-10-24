@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>M. World</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&family=Poppins:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600&family=Hind:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="assets/salon.webp">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 --bg:#12050a;--panel:#2a0c14;--ink:#f7ecd4;--mute:#cdb59a;--accent:#d4af37;--glow:#7a1f2b;
@@ -273,7 +275,7 @@ footer button{border-radius:999px}
 <div class="hero" id="hero">
   <h1 id="title">पान
 दुकान</h1>
-  <div class="actions"><button id="chatBtn" aria-expanded="false">Live chat</button><button class="pill" id="rainBtn" aria-pressed="false">Rain</button></div>
+  <div class="actions"><button id="chatBtn" aria-expanded="false">Live chat</button><button class="pill" id="rainBtn" aria-pressed="false">Rain</button><button class="pill" id="sleepBtn" aria-label="Sleep timer">Sleep</button></div>
   <p class="tag" id="tag"></p>
   <div class="radio" id="radio">
     <div class="notes" aria-hidden="true"><i>♪</i><i>♫</i><i>♬</i></div>
@@ -301,8 +303,8 @@ footer button{border-radius:999px}
     <div class="feat" id="feat"></div>
   </section>
   <section id="faq">
-    <h2>Questions, answered</h2>
-    <details><summary>Is this radio free?</summary><p>Yes. It plays in your browser on phone or desktop, with no sign-up.</p></details>
+    <h2>Good to know</h2>
+    <details><summary>Do I have to pay anything?</summary><p>No. Just open the page on your phone or computer and press play. There is nothing to install or sign up for.</p></details>
     <details><summary>What kind of music plays here?</summary><p>Old Hindi film songs and the sounds around them, grouped into stations by mood: the paan shop, the highway, dad's cassette shelf, the building site.</p></details>
     <details><summary>How do I change the station?</summary><p>Tap a station name at the top, or use Prev and Next on the radio.</p></details>
     <details><summary>What does the Rain button do?</summary><p>It starts a rainy-day effect with falling rain on the screen and the sound of a monsoon shower. Tap it again to stop.</p></details>
@@ -311,18 +313,27 @@ footer button{border-radius:999px}
 </main>
 <footer>
   <button id="support">Support the radio</button>
-  <p>© M. World. This is a fan-made nostalgia project. Songs belong to their artists and labels.</p>
-  <p id="ver" style="font-size:.75rem;opacity:.6">site v19</p>
+  <button id="reqBtn" style="margin-left:.5rem">Request a song</button>
+  <p>© M. World. An independent nostalgia radio. Songs belong to their artists and labels.</p>
 </footer>
 <button id="floatPause" hidden aria-label="Pause music"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg><span>Pause music</span></button>
+<dialog id="rdlg"><form method="dialog" id="rform" style="text-align:left;display:grid;gap:.6rem">
+  <p class="dt" style="margin:0;text-align:center">Request a song</p>
+  <p class="ds" style="margin:0;text-align:center">Tell us which old song you miss. We read every request.</p>
+  <input id="rtitle" maxlength="120" required placeholder="Song name" aria-label="Song name" style="padding:.7rem 1rem;border-radius:.8rem;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.3);color:#fff;font:500 1rem var(--body)">
+  <input id="rartist" maxlength="80" placeholder="Singer or film (optional)" aria-label="Singer or film" style="padding:.7rem 1rem;border-radius:.8rem;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.3);color:#fff;font:500 1rem var(--body)">
+  <select id="rtheme" aria-label="Station" style="padding:.7rem 1rem;border-radius:.8rem;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.3);color:#fff;font:500 1rem var(--body)"></select>
+  <p id="rmsg" class="ds" style="margin:0;text-align:center;min-height:1.2em"></p>
+  <div style="display:flex;gap:.6rem;justify-content:center"><button type="submit" id="rsend">Send request</button><button type="button" id="rcancel">Close</button></div>
+</form></dialog>
 <dialog id="dlg"><div class="heart" aria-hidden="true" style="font-size:1.6rem">❤️</div><p class="dt" tabindex="-1" autofocus>These old songs stay alive because of you</p><p class="ds">M. World is run by one person. Every song, every server bill, every late night. If these songs made your day even a little lighter, please send whatever you can and help keep this radio going. Your small gift means the world to me.</p><p class="perk">✨ Supporters keep M. World <b>ad-free for life</b>. No ads, ever.</p><img class="qr" alt="UPI payment QR code" src="assets/qr.png"><p class="ds2">Scan with any UPI app. Thank you 🙏</p><button id="close">Maybe later</button></dialog>
 
 <script src="config.js?v=3"></script>
 <script>
 const S=[
-{id:"salon",tab:"Pan Shop",hi:"पान\nदुकान",tag:"A 2000s paan shop, rebuilt as a radio",h2:"The paan shop radio",
+{id:"salon",tab:"Pan Shop",hi:"पान\nदुकान",tag:"Counter gossip and 2000s hits, straight from the paan shop",h2:"The paan shop radio",
  about:"A battered radio on the counter, the smell of fresh betel leaf, and the neighbourhood's gossip. This station plays 2000s Bollywood hits the way you heard them while waiting for your paan.",
- feat:["2000s Bollywood|Chartbusters from the era of CD shops and FM.","Paan shop chatter|One-liners from the crowd at the counter.","Always on|Streams until you close the tab."],
+ feat:["2000s Bollywood|Chartbusters from the era of CD shops and FM.","Paan shop chatter|One-liners from the crowd at the counter.","Never-ending|Keeps playing until you stop it."],
  talk:"Hear the paan wala",q:["Bhaiya, meetha paan lagana, zara kam chuna.","Aaj kal ke ladke sab filmy hain.","Do minute ruko, abhi lagata hoon."],
  tracks:[["Pyaar Ki Ek Kahani","Kids' favourites, 2000s"],["Kaho Naa Pyaar Hai","Hit-parade mix"],["Dil Chahta Hai","Waiting-room mix"]]},
 {id:"bus",tab:"Highway Dhaba",hi:"हाईवे ढाबा",tag:"Chai, charpai and old songs on the night highway",h2:"The midnight dhaba playlist",
@@ -353,7 +364,7 @@ function closeMenu(){tabs.hidden=true;mb.setAttribute('aria-expanded','false')}
 mb.onclick=e=>{e.stopPropagation();const o=tabs.hidden;tabs.hidden=!o;mb.setAttribute('aria-expanded',o)};
 document.addEventListener('click',e=>{if(!tabs.contains(e.target))closeMenu()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
-const PHOTOS={salon:"assets/salon.jpg",bus:"assets/bus.jpg",papa:"assets/papa.jpg",rap:"assets/rap.jpg",raju:"assets/raju.jpg"};
+const PHOTOS={salon:"assets/salon.webp",bus:"assets/bus.webp",papa:"assets/papa.webp",rap:"assets/rap.webp",raju:"assets/raju.webp"};
 const DEFAULT_PHOTOS=Object.assign({},PHOTOS);
 /* Wallpapers the admin changed are remembered, so a refresh shows the right photo at once (no old photo flashing first). */
 window.__wallPending=false;
@@ -532,6 +543,24 @@ if(window.claude&&claude.use){
     if(t.closest('a,button,input,textarea,select,dialog,.radio,.chat,header,#aboutus,#faq,footer,.drop'))return;
     if(t===document.body||t===document.documentElement||t.id==='hero'||t.id==='herobg'||t.id==='scene'||t.id==='title'||t.id==='tag'||t.classList.contains('hero'))$('play').click();
   });
+  /* sleep timer: Sleep -> 15 -> 30 -> 60 -> off; the music fades out and stops */
+  (function(){
+    const b=$('sleepBtn');let end=0,tm=null,iv=null;
+    const steps=[0,15,30,60];let k=0;
+    const label=()=>{b.textContent=k?'Sleep '+steps[k]+'m':'Sleep'};
+    function fadeAndStop(){
+      const a=window.__mwAudio;let v=1;
+      iv=setInterval(()=>{
+        v-=.1;if(a)a.volume=Math.max(0,v);
+        if(v<=0){clearInterval(iv);iv=null;if(radio.classList.contains('playing'))$('play').click();if(a)a.volume=1;k=0;label()}
+      },400);
+    }
+    b.onclick=()=>{
+      clearTimeout(tm);if(iv){clearInterval(iv);iv=null;if(window.__mwAudio)window.__mwAudio.volume=1}
+      k=(k+1)%steps.length;label();
+      if(k)tm=setTimeout(fadeAndStop,steps[k]*60000);
+    };
+  })();
   /* keyboard: Space or K = play/pause, Left/Right = previous/next song */
   document.addEventListener('keydown',e=>{
     if(e.ctrlKey||e.metaKey||e.altKey)return;
@@ -570,6 +599,6 @@ if(window.claude&&claude.use){
 tune(0);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=19"></script>
+<script src="backend.js?v=20"></script>
 </body>
 </html>
