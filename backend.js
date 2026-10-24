@@ -15,6 +15,9 @@
   /* ---------- Songs ---------- */
   const audio = new Audio();
   audio.preload = 'auto';
+  audio.setAttribute('controlsList', 'nodownload noplaybackrate');
+  audio.disableRemotePlayback = true;
+  document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('.radio, #floatPause')) e.preventDefault(); });
   audio.setAttribute('playsinline', '');
   let songs = [], idx = 0, on = false;
 
@@ -46,6 +49,7 @@
       art.style.backgroundImage = '';
       art.textContent = EM[S[cur].id] || '';
     }
+    try { updateSession(); } catch (e) {}
   }
   let listened = 0, lastT = null, gotListen = false, gotDone = false;
   function load(i, autoplay) {
@@ -72,7 +76,17 @@
   // Lock-screen / notification controls keep playback alive when the phone screen is off.
   function updateSession() {
     if (!('mediaSession' in navigator) || !songs[idx] || !window.MediaMetadata) return;
-    try { navigator.mediaSession.metadata = new MediaMetadata({ title: songs[idx].title, artist: songs[idx].artist || 'M. World' }); } catch (e) {}
+    try {
+      const sg = songs[idx];
+      // Cover picture for the browser's media panel / phone lock screen: the song's own thumbnail,
+      // otherwise the theme photo.
+      let src = '';
+      if (sg.wallpaper_path) src = sb.storage.from('wallpapers').getPublicUrl(sg.wallpaper_path).data.publicUrl;
+      else if (PHOTOS[S[cur].id]) { try { src = new URL(PHOTOS[S[cur].id], location.href).href; } catch (e) {} }
+      const meta = { title: sg.title, artist: sg.artist || 'M. World' };
+      if (src) meta.artwork = [96, 128, 256, 512].map(n => ({ src, sizes: n + 'x' + n }));
+      navigator.mediaSession.metadata = new MediaMetadata(meta);
+    } catch (e) {}
   }
   if ('mediaSession' in navigator) {
     const h = (a, f) => { try { navigator.mediaSession.setActionHandler(a, f); } catch (e) {} };
@@ -230,7 +244,7 @@
     try {
       const { data, error } = await sb.from('theme_settings').select('theme,is_public');
       const ver = document.getElementById('ver');
-      if (error || !data) { if (ver) ver.textContent = 'site v17 · private list not loaded: ' + (error ? error.message : 'no data'); return; }
+      if (error || !data) { if (ver) ver.textContent = 'site v18 · private list not loaded: ' + (error ? error.message : 'no data'); return; }
       // Private themes are hidden from everyone, admin included. Add ?preview to the address to see them as the admin.
       let admin = false;
       if (/(^|[?&])preview(=|&|$)/.test(location.search)) {
@@ -248,7 +262,7 @@
         b.textContent = b.textContent.replace(/ \(private\)$/, '');
         if (admin && priv.includes(S[k].id)) b.textContent += ' (private)';
       });
-      { const v = document.getElementById('ver'); if (v) v.textContent = 'site v17 · private themes: ' + (priv.join(', ') || 'none'); }
+      { const v = document.getElementById('ver'); if (v) v.textContent = 'site v18 · private themes: ' + (priv.join(', ') || 'none'); }
       if (HIDDEN.has(S[cur].id)) tune(cur, 1);
     } catch (e) {}
   })();
