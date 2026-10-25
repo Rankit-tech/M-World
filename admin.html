@@ -168,6 +168,8 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
       <input id="file" type="file" accept="audio/*" multiple>
       <label for="wfile">Thumbnail (cover picture) for this song, optional. It shows in the music player. If you pick many songs, all get this picture.</label>
       <input id="wfile" type="file" accept="image/jpeg,image/png,image/webp">
+      <label for="vfile">Background video for this song, optional (mp4 or webm, up to 50 MB). It plays silently behind the player while the song plays. Only used when you pick one song. Compress to 720p first for fast loading.</label>
+      <input id="vfile" type="file" accept="video/mp4,video/webm">
       <div class="row">
         <div><label for="title">Title (only when you pick one file; otherwise the file name is used)</label><input id="title" maxlength="120"></div>
         <div><label for="artist">Artist</label><input id="artist" maxlength="120"></div>
@@ -364,6 +366,12 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
     const theme=$('theme').value,single=files.length===1&&$('title').value.trim();
     const wf=$('wfile').files[0];
     if(wf&&!wf.type.startsWith('image/')){say($('umsg'),'The thumbnail must be an image.','err');return}
+    const vf=$('vfile').files[0];let vfail='';
+    if(vf){
+      if(!/^video\/(mp4|webm)$/.test(vf.type)){say($('umsg'),'The video must be mp4 or webm.','err');return}
+      if(vf.size>50*1024*1024){say($('umsg'),'The video is bigger than 50 MB. Compress it to 720p first.','err');return}
+      if(files.length!==1){say($('umsg'),'A video can only be added when you upload one song at a time.','err');return}
+    }
     $('up').disabled=true;let done=0,fail=[],wfail=0,wblob=null;
     if(wf){try{wblob=await shrink(wf,true)}catch(e){say($('umsg'),'Thumbnail problem: '+e.message,'err');$('up').disabled=false;return}}
     for(const f of files){
@@ -373,6 +381,12 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
       if(u.error){fail.push(f.name+': '+u.error.message);continue}
       const r=await sb.from('songs').insert({title:single||nice(f.name),artist:$('artist').value.trim()||null,theme,file_path:path,license:$('license').value,credit:$('credit').value.trim()||null}).select('id').single();
       if(r.error){await sb.storage.from('songs').remove([path]);fail.push(f.name+': '+r.error.message);continue}
+      if(vf&&files.length===1){
+        const vp=theme+'/'+Date.now()+'-v-'+safe(vf.name);
+        const vu=await sb.storage.from('songs').upload(vp,vf,{contentType:vf.type,upsert:false});
+        const vr=vu.error?vu:await sb.from('songs').update({video_path:vp}).eq('id',r.data.id);
+        if(vr.error){vfail=vr.error.message;if(!vu.error)await sb.storage.from('songs').remove([vp])}
+      }
       if(wblob){
         const wp='songs/'+r.data.id+'-'+Date.now()+'.jpg';
         const wu=await sb.storage.from('wallpapers').upload(wp,wblob,{contentType:'image/jpeg',upsert:false});
@@ -383,9 +397,10 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
     }
     $('up').disabled=false;
     if(fail.length)say($('umsg'),done+' uploaded. Failed: '+fail.join('; '),'err');
+    else if(vfail)say($('umsg'),'Song uploaded, but the video failed: '+vfail+(/video_path/.test(vfail)||/mime|size/i.test(vfail)?' Run supabase/update-v10.sql in the Supabase SQL Editor.':''),'err');
     else if(wfail)say($('umsg'),done+' song(s) uploaded, but the thumbnail failed for '+wfail+'. Run supabase/update-v4.sql and update-v5.sql, then set it from the Songs tab.','err');
     else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'".'+(wblob?' Thumbnail added.':'')+' Open the Songs tab to see them.','ok');
-    $('file').value='';$('wfile').value='';$('title').value='';
+    $('file').value='';$('wfile').value='';$('vfile').value='';$('title').value='';
   };
 
   /* ---------- wallpapers ---------- */
@@ -564,7 +579,7 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
     const sm=document.createElement('div');sm.className='sm';
     const b=document.createElement('b');b.textContent=s.title;
     const sub=document.createElement('small');
-    sub.textContent=[s.artist,s.pin_rank===1?'starts first (pinned)':s.pin_rank!=null?'pinned':null,s.trend_rank!=null?'trending #'+s.trend_rank:null,s.wallpaper_path?'has thumbnail':null,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
+    sub.textContent=[s.artist,s.pin_rank===1?'starts first (pinned)':s.pin_rank!=null?'pinned':null,s.trend_rank!=null?'trending #'+s.trend_rank:null,s.wallpaper_path?'has thumbnail':null,s.video_path?'has video':null,s.listens+' listens',s.completes+' full plays'].filter(Boolean).join(' · ');
     sm.append(b,sub);
     const pb=iconBtn('play','Preview');pb.onclick=()=>preview(s,pb);
     const db=iconBtn('dots','More options for '+s.title);
@@ -575,6 +590,8 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
       {label:'Move to position\u2026',fn:()=>{const v=prompt('New position in '+(THEMES[s.theme]||s.theme)+' (1 = top):',s.rank);if(v!==null)moveSong(s,parseInt(v,10))}},
       ...(s.pin_rank!=null?[{label:'Unpin (back to automatic rank)',fn:()=>unpinSong(s)}]:[]),
       {label:s.wallpaper_path?'Change thumbnail of this song':'Set thumbnail for this song',fn:()=>pickSongWall(s)},
+      {label:s.video_path?'Change background video':'Add background video',fn:()=>pickSongVideo(s)},
+      ...(s.video_path?[{label:'Remove background video',fn:()=>removeSongVideo(s)}]:[]),
       ...(s.wallpaper_path?[{label:'Remove song thumbnail',fn:()=>removeSongWall(s)}]:[]),
       {label:'Edit title, artist, theme',fn:()=>openEdit(s)},
       {label:'Delete song',danger:true,fn:()=>deleteSong(s)}
@@ -631,6 +648,27 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
     }catch(e){alert(/wallpaper_path/.test(e.message||'')?'Run supabase/update-v5.sql in the Supabase SQL Editor first.':/bucket|not found/i.test(e.message||'')?'Run supabase/update-v4.sql first.':'Could not set thumbnail: '+(e.message||e))}
     refreshSongs();
   };
+  const vidPick=document.createElement('input');vidPick.type='file';vidPick.accept='video/mp4,video/webm';vidPick.hidden=true;document.body.append(vidPick);
+  let vidFor=null;
+  function pickSongVideo(s){vidFor=s;vidPick.value='';vidPick.click()}
+  vidPick.onchange=async()=>{
+    const s=vidFor,f=vidPick.files[0];if(!s||!f)return;
+    if(!/^video\/(mp4|webm)$/.test(f.type)){alert('The video must be mp4 or webm.');return}
+    if(f.size>50*1024*1024){alert('The video is bigger than 50 MB. Compress it to 720p first.');return}
+    const path=s.theme+'/'+Date.now()+'-v-'+safe(f.name);
+    const u=await sb.storage.from('songs').upload(path,f,{contentType:f.type,upsert:false});
+    if(u.error){alert('Video upload failed: '+u.error.message+' (run supabase/update-v10.sql if you have not)');return}
+    const r=await sb.from('songs').update({video_path:path}).eq('id',s.id);
+    if(r.error){await sb.storage.from('songs').remove([path]);alert(/video_path/.test(r.error.message)?'Run supabase/update-v10.sql in the Supabase SQL Editor first.':'Could not save: '+r.error.message);return}
+    if(s.video_path)await sb.storage.from('songs').remove([s.video_path]);
+    refreshSongs();
+  };
+  async function removeSongVideo(s){
+    const r=await sb.from('songs').update({video_path:null}).eq('id',s.id);
+    if(r.error){alert('Could not remove: '+r.error.message);return}
+    if(s.video_path)await sb.storage.from('songs').remove([s.video_path]);
+    refreshSongs();
+  }
   async function removeSongWall(s){
     const r=await sb.from('songs').update({wallpaper_path:null}).eq('id',s.id);
     if(r.error){alert('Could not remove: '+r.error.message);return}
@@ -640,7 +678,7 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
   async function deleteSong(s){
     if(!confirm('Delete "'+s.title+'"? This cannot be undone.'))return;
     if(pvId===s.id)stopPreview();
-    await sb.storage.from('songs').remove([s.file_path]);
+    await sb.storage.from('songs').remove([s.file_path].concat(s.video_path?[s.video_path]:[]));
     if(s.wallpaper_path)await sb.storage.from('wallpapers').remove([s.wallpaper_path]);
     const {error}=await sb.from('songs').delete().eq('id',s.id);
     if(error)alert('Could not delete: '+error.message);

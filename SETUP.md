@@ -75,3 +75,7 @@ Run these in the Supabase SQL Editor, in order, after update-v7.sql:
 
 1. `supabase/update-v8.sql`: song files stop being reachable by a plain public link. The site uses links that expire after a few hours. Songs of private themes can no longer be fetched by visitors. If you skip this file, everything still works exactly as before.
 2. `supabase/update-v9.sql`: adds the "Request a song" form for visitors and the Requests tab in the admin panel.
+
+## Update v10 (background video for a song)
+
+Run `supabase/update-v10.sql` once, after update-v9.sql. Then in the admin panel you can add a short mp4 or webm (up to 50 MB) to a song, either in the Upload tab (one song at a time) or from the three-dot menu in the Songs tab. The video plays silently behind the player while that song plays, and stops when the music pauses. It is skipped for visitors who use data saver or reduced motion.

@@ -156,6 +156,7 @@ dialog{max-width:min(26rem,94vw);max-height:92vh;overflow:auto;padding:1.2rem}
 .qr{display:block;width:100%;max-height:62vh;object-fit:contain;border-radius:1rem;background:#fff;margin:0 auto .9rem}
 h1{background:linear-gradient(180deg,var(--ink) 35%,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 .05em .08em rgba(0,0,0,.55))}
 .herobg{position:absolute;top:0;left:0;right:0;height:100svh;z-index:-1;background-size:cover;background-position:center;-webkit-mask-image:linear-gradient(#000 72%,transparent);mask-image:linear-gradient(#000 72%,transparent)}
+.herobg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .herobg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.6))}
 h1{padding:.14em .05em .2em;line-height:1.15}
 [data-theme=raju]{--display:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Inter','Helvetica Neue',Arial,'Noto Sans Devanagari',sans-serif}
@@ -257,7 +258,7 @@ footer button{border-radius:999px}
 </head>
 <body data-theme="salon">
 <div class="scene" id="scene"></div>
-<div class="herobg" id="herobg" hidden></div>
+<div class="herobg" id="herobg" hidden><video id="herovid" muted loop playsinline preload="none" hidden></video></div>
 <canvas class="rain" id="rain" aria-hidden="true" hidden></canvas>
 <header>
   <div class="left"><div class="brand">M. World</div><div class="live" id="live">212 online</div></div>
@@ -540,7 +541,7 @@ if(window.claude&&claude.use){
   document.addEventListener('click',e=>{
     const t=e.target;
     if(t.closest('a,button,input,textarea,select,dialog,.radio,.chat,header,#aboutus,#faq,footer,.drop'))return;
-    if(t===document.body||t===document.documentElement||t.id==='hero'||t.id==='herobg'||t.id==='scene'||t.id==='title'||t.id==='tag'||t.classList.contains('hero'))$('play').click();
+    if(t===document.body||t===document.documentElement||t.id==='hero'||t.id==='herobg'||t.id==='herovid'||t.id==='scene'||t.id==='title'||t.id==='tag'||t.classList.contains('hero'))$('play').click();
   });
   /* sleep timer: Sleep -> 15 -> 30 -> 60 -> off; the music fades out and stops */
   (function(){
@@ -598,6 +599,6 @@ if(window.claude&&claude.use){
 tune(0);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=22"></script>
+<script src="backend.js?v=23"></script>
 </body>
 </html>

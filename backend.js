@@ -30,7 +30,7 @@
   const urlOf = p => signed[p] || publicUrl(p);
   async function signAll(list) {
     try {
-      const paths = list.map(x => x.file_path);
+      const paths = []; list.forEach(x => { paths.push(x.file_path); if (x.video_path) paths.push(x.video_path); });
       const { data, error } = await sb.storage.from('songs').createSignedUrls(paths, 21600);
       if (error || !data) return;
       data.forEach(d => { if (d.signedUrl && !d.error) signed[d.path] = d.signedUrl; });
@@ -50,10 +50,10 @@
   // Each song can have its own thumbnail (cover picture) shown in the player.
   // The big background photo always stays the theme photo.
   function applyBg() {
-    const s = songs[idx], art = $('art'), hb = $('herobg');
+    const s = songs[idx], art = $('art'), hb = $('herobg'), hv = $('herovid');
     const url = PHOTOS[S[cur].id];
     if (!window.__wallPending) {
-      if (url) { hb.style.backgroundImage = 'url("' + url + '")'; hb.hidden = false; } else hb.hidden = true;
+      if (url) { hb.style.backgroundImage = 'url("' + url + '")'; hb.hidden = false; } else hb.hidden = !hv.src || hv.hidden;
     }
     if (s && s.wallpaper_path) {
       art.style.backgroundImage = 'url("' + sb.storage.from('wallpapers').getPublicUrl(s.wallpaper_path).data.publicUrl + '")';
@@ -64,6 +64,24 @@
     }
     try { updateSession(); } catch (e) {}
   }
+  // Optional background video of the current song: silent, looping, follows play/pause of the music.
+  // Skipped when the visitor asked for reduced motion or data saving.
+  const vidEl = $('herovid');
+  function setVideo() {
+    const sg = songs[idx];
+    const calm = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) ||
+                 (navigator.connection && navigator.connection.saveData);
+    if (!sg || !sg.video_path || calm) {
+      vidEl.pause(); vidEl.removeAttribute('src'); vidEl.hidden = true;
+      if (!PHOTOS[S[cur].id]) $('herobg').hidden = true;
+      return;
+    }
+    vidEl.src = urlOf(sg.video_path); vidEl.hidden = false; $('herobg').hidden = false;
+    vidEl.onerror = () => { vidEl.removeAttribute('src'); vidEl.hidden = true; if (!PHOTOS[S[cur].id]) $('herobg').hidden = true; };
+    if (!audio.paused) vidEl.play().catch(() => {});
+  }
+  audio.addEventListener('playing', () => { if (!vidEl.hidden) vidEl.play().catch(() => {}); });
+  audio.addEventListener('pause', () => { vidEl.pause(); });
   let listened = 0, lastT = null, gotListen = false, gotDone = false;
   function load(i, autoplay) {
     listened = 0; lastT = null; gotListen = false; gotDone = false;
@@ -71,6 +89,7 @@
     delete audio.dataset.retried;
     audio.src = urlOf(songs[idx].file_path);
     show();
+    setVideo();
     $('fill').style.width = '0%'; $('t1').textContent = '0:00'; $('t2').textContent = '0:00';
     if (autoplay) { on = true; setIcon(true); tryPlay(0); }
     updateSession();
@@ -226,6 +245,7 @@
   async function loadTheme() {
     on = false; audio.pause(); audio.removeAttribute('src'); setIcon(false);
     songs = []; idx = 0;
+    vidEl.pause(); vidEl.removeAttribute('src'); vidEl.hidden = true;
     const id = S[cur].id;
     let { data, error } = await sb.rpc('ranked_songs', { p_theme: id });
     if (error) ({ data, error } = await sb.from('songs').select('*').eq('theme', id).order('created_at', { ascending: true }));
