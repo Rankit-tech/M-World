@@ -400,7 +400,7 @@
         data.forEach(w => {
           custom[w.theme] = sb.storage.from('wallpapers').getPublicUrl(w.file_path).data.publicUrl + '?v=' + encodeURIComponent(w.updated_at);
         });
-        Object.keys(DEFAULT_PHOTOS).forEach(k => { PHOTOS[k] = custom[k] || DEFAULT_PHOTOS[k]; });
+        S.forEach(t => { const k = t.id; if (custom[k] || DEFAULT_PHOTOS[k]) PHOTOS[k] = custom[k] || DEFAULT_PHOTOS[k]; else delete PHOTOS[k]; });
         try { localStorage.setItem('mw_walls', JSON.stringify(custom)); } catch (e) {}
       }
     } catch (e) {}

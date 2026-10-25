@@ -389,7 +389,7 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
   };
 
   /* ---------- wallpapers ---------- */
-  const DEFAULT_PICS={salon:'assets/salon.webp',bus:'assets/bus.webp',papa:'assets/papa.webp',rap:'assets/rap.webp',raju:'assets/raju.webp'};
+  const DEFAULT_PICS={bus:'assets/bus.webp',papa:'assets/papa.webp',rap:'assets/rap.webp',raju:'assets/raju.webp'};
   let walls={};
   async function refreshWalls(){
     const {data,error}=await sb.from('wallpapers').select('theme,file_path,updated_at');
@@ -403,8 +403,8 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
       const c=document.createElement('div');c.className='wall';
       const pic=document.createElement('div');pic.className='pic';
       const w=walls[k];
-      pic.style.backgroundImage='url("'+(w?sb.storage.from('wallpapers').getPublicUrl(w.file_path).data.publicUrl+'?v='+encodeURIComponent(w.updated_at):DEFAULT_PICS[k])+'")';
-      const b=document.createElement('b');b.textContent=THEMES[k]+(w?' (custom)':' (original)');
+      {const u=w?sb.storage.from('wallpapers').getPublicUrl(w.file_path).data.publicUrl+'?v='+encodeURIComponent(w.updated_at):DEFAULT_PICS[k];pic.style.backgroundImage=u?'url("'+u+'")':'linear-gradient(160deg,#253745,#06141B)'}
+      const b=document.createElement('b');b.textContent=THEMES[k]+(w?' (custom)':DEFAULT_PICS[k]?' (original)':' (no photo yet)');
       const acts=document.createElement('div');acts.className='acts';
       const inp=document.createElement('input');inp.type='file';inp.accept='image/jpeg,image/png,image/webp';inp.hidden=true;
       const up=document.createElement('button');up.type='button';up.textContent='Change photo';up.onclick=()=>inp.click();

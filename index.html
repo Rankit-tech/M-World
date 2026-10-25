@@ -6,7 +6,6 @@
 <title>M. World</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="image" href="assets/salon.webp">
 <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
@@ -364,7 +363,7 @@ function closeMenu(){tabs.hidden=true;mb.setAttribute('aria-expanded','false')}
 mb.onclick=e=>{e.stopPropagation();const o=tabs.hidden;tabs.hidden=!o;mb.setAttribute('aria-expanded',o)};
 document.addEventListener('click',e=>{if(!tabs.contains(e.target))closeMenu()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
-const PHOTOS={salon:"assets/salon.webp",bus:"assets/bus.webp",papa:"assets/papa.webp",rap:"assets/rap.webp",raju:"assets/raju.webp"};
+const PHOTOS={bus:"assets/bus.webp",papa:"assets/papa.webp",rap:"assets/rap.webp",raju:"assets/raju.webp"};
 const DEFAULT_PHOTOS=Object.assign({},PHOTOS);
 /* Wallpapers the admin changed are remembered, so a refresh shows the right photo at once (no old photo flashing first). */
 window.__wallPending=false;
@@ -599,6 +598,6 @@ if(window.claude&&claude.use){
 tune(0);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=21"></script>
+<script src="backend.js?v=22"></script>
 </body>
 </html>
