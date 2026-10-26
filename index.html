@@ -307,6 +307,26 @@ header #menuBtn{padding:.5rem 1rem}
 .shgrid button svg{width:22px;height:22px;fill:currentColor}
 .shgrid button:hover{background:rgba(255,255,255,.16)!important}
 #shdlg{max-width:min(24rem,94vw)}
+
+/* ===== Glassmorphism (final layer): clean frosted glass over a different colour per place ===== */
+:root{--lg-fill:linear-gradient(135deg,rgba(255,255,255,.17),rgba(255,255,255,.06));--lg-edge:inset 0 1px 0 rgba(255,255,255,.38);--lg-blur:blur(22px) saturate(165%);
+  --glass:linear-gradient(135deg,rgba(255,255,255,.17),rgba(255,255,255,.06));--glass-line:rgba(255,255,255,.28);--glass-fx:blur(22px) saturate(165%);
+  --c1:#1f8a4c;--c2:#e0a82e;--c3:#0b2a1b}
+[data-theme=salon]{--c1:#1f8a4c;--c2:#e0a82e;--c3:#0b2a1b}
+[data-theme=bus]{--c1:#7a2a8c;--c2:#f08a3c;--c3:#1a0b24}
+[data-theme=papa]{--c1:#b04a5a;--c2:#e8b86a;--c3:#2a1018}
+[data-theme=raju]{--c1:#e0a020;--c2:#c8552a;--c3:#2b1a08}
+[data-theme=rap]{--c1:#8a2be2;--c2:#ff3d9a;--c3:#12041f}
+.scene{background:radial-gradient(60% 50% at 20% 10%,color-mix(in srgb,var(--c1) 55%,transparent),transparent 70%),radial-gradient(55% 50% at 85% 90%,color-mix(in srgb,var(--c2) 45%,transparent),transparent 70%),var(--c3)!important}
+.scene::before{background:radial-gradient(circle,var(--c1),transparent 65%)!important;opacity:.5}
+.scene::after{background:radial-gradient(circle,var(--c2),transparent 65%)!important;opacity:.4}
+.radio,.chat,.drop,.feat div,details,header,dialog,.live{background:rgba(255,255,255,.10)!important;-webkit-backdrop-filter:var(--lg-blur)!important;backdrop-filter:var(--lg-blur)!important;border:1px solid rgba(255,255,255,.26)!important;box-shadow:0 8px 32px rgba(0,0,0,.26)!important}
+header{border-radius:999px}
+#menuBtn,.pill,.links,.ctl button,#floatPause,#cclose,#csend,.shgrid button{background:rgba(255,255,255,.12)!important;-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);border:1px solid rgba(255,255,255,.28)!important;box-shadow:0 4px 14px rgba(0,0,0,.2)!important}
+header .links{background:none!important;border:0!important;box-shadow:none!important}
+#chatBtn,.ctl .play,footer button,#csend{background:var(--accent)!important;color:#16181a!important;border:0!important;box-shadow:0 6px 20px rgba(0,0,0,.28)!important}
+.ctl button:hover,#menuBtn:hover,.pill:hover{background:rgba(255,255,255,.2)!important}
+.drop{border-radius:1.2rem}
 </style>
 </head>
 <body data-theme="salon">
@@ -660,6 +680,6 @@ if(window.claude&&claude.use){
 tune(0);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=27"></script>
+<script src="backend.js?v=28"></script>
 </body>
 </html>
