@@ -307,6 +307,33 @@ header #menuBtn{padding:.5rem 1rem}
 .shgrid button svg{width:22px;height:22px;fill:currentColor}
 .shgrid button:hover{background:rgba(255,255,255,.16)!important}
 #shdlg{max-width:min(24rem,94vw)}
+
+/* ===== Glassmorphism, only for the Share and Support popups ===== */
+@keyframes glassIn{from{opacity:0;transform:translateY(26px) scale(.94);filter:blur(12px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes glassItem{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes glassFade{from{opacity:0}to{opacity:1}}
+@keyframes glassShine{0%{transform:translateX(-120%) skewX(-18deg)}60%,100%{transform:translateX(220%) skewX(-18deg)}}
+#dlg,#shdlg{position:relative;background:linear-gradient(135deg,rgba(255,255,255,.2),rgba(255,255,255,.07))!important;-webkit-backdrop-filter:blur(26px) saturate(170%)!important;backdrop-filter:blur(26px) saturate(170%)!important;border:1px solid rgba(255,255,255,.32)!important;border-radius:1.7rem!important;box-shadow:0 18px 60px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.5)!important;overflow:hidden auto}
+#dlg[open],#shdlg[open]{animation:glassIn .5s cubic-bezier(.22,1.2,.36,1) both}
+#dlg::backdrop,#shdlg::backdrop{background:rgba(8,8,10,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#dlg[open]::backdrop,#shdlg[open]::backdrop{animation:glassFade .4s ease both}
+#dlg[open]>*,#shdlg[open]>div>*{animation:glassItem .55s cubic-bezier(.22,1.2,.36,1) both}
+#dlg[open]>:nth-child(1),#shdlg[open]>div>:nth-child(1){animation-delay:.08s}
+#dlg[open]>:nth-child(2),#shdlg[open]>div>:nth-child(2){animation-delay:.14s}
+#dlg[open]>:nth-child(3),#shdlg[open]>div>:nth-child(3){animation-delay:.2s}
+#dlg[open]>:nth-child(4),#shdlg[open]>div>:nth-child(4){animation-delay:.26s}
+#dlg[open]>:nth-child(5),#shdlg[open]>div>:nth-child(5){animation-delay:.32s}
+#dlg[open]>:nth-child(6){animation-delay:.38s}#dlg[open]>:nth-child(7){animation-delay:.44s}
+#dlg::after,#shdlg::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);pointer-events:none;animation:glassShine 3.6s .6s ease-in-out infinite}
+#dlg button,#shdlg>div>button#shclose{background:rgba(255,255,255,.16)!important;color:#fff!important;border:1px solid rgba(255,255,255,.35)!important;border-radius:999px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4);transition:transform .3s cubic-bezier(.22,1.2,.36,1),background .25s}
+#dlg button:hover,#shclose:hover{background:rgba(255,255,255,.26)!important;transform:translateY(-1px) scale(1.03)}
+#dlg button:active,#shclose:active{transform:scale(.95)}
+#dlg .qr{border:1px solid rgba(255,255,255,.5)!important;border-radius:1.2rem;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#dlg .perk{background:rgba(255,255,255,.12)!important;border:1px solid rgba(255,255,255,.3)!important;border-radius:1rem}
+#shdlg .shgrid button{background:rgba(255,255,255,.14)!important;border:1px solid rgba(255,255,255,.3)!important;border-radius:1.1rem;transition:transform .3s cubic-bezier(.22,1.2,.36,1),background .25s}
+#shdlg .shgrid button:hover{background:rgba(255,255,255,.26)!important;transform:translateY(-2px)}
+#shdlg #shimg{border:1px solid rgba(255,255,255,.25)}
+@media (prefers-reduced-motion:reduce){#dlg,#shdlg,#dlg>*,#shdlg>div>*,#dlg::after,#shdlg::after{animation:none!important}}
 </style>
 </head>
 <body data-theme="salon">
@@ -660,6 +687,6 @@ if(window.claude&&claude.use){
 tune(0);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=27"></script>
+<script src="backend.js?v=29"></script>
 </body>
 </html>
