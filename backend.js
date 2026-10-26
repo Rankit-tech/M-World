@@ -255,6 +255,33 @@
   $('shareBtn').onclick = openShare;
   $('shclose').onclick = () => $('shdlg').close();
 
+  // ---------- Song requests ----------
+  (function () {
+    const dlg = $('rdlg'); if (!dlg) return;
+    $('reqBtn').onclick = () => {
+      $('rtheme').innerHTML = '<option value="">Any station</option>' + S.filter(t => !HIDDEN.has(t.id))
+        .map(t => '<option value="' + t.id + '"' + (t.id === S[cur].id ? ' selected' : '') + '>' + t.tab + '</option>').join('');
+      $('rmsg').textContent = ''; dlg.showModal();
+    };
+    $('rcancel').onclick = () => dlg.close();
+    $('rform').addEventListener('submit', async e => {
+      e.preventDefault();
+      const title = $('rtitle').value.trim(); if (!title) return;
+      let n = 0, day = new Date().toDateString();
+      try { const o = JSON.parse(localStorage.getItem('mw_req') || '{}'); n = o.d === day ? o.n : 0; } catch (x) {}
+      if (n >= 5) { $('rmsg').textContent = 'That is enough for today. Please come back tomorrow.'; return; }
+      $('rsend').disabled = true;
+      const { error } = await sb.from('song_requests').insert({
+        title: title.slice(0, 120), artist: $('rartist').value.trim().slice(0, 80) || null,
+        theme: $('rtheme').value || null, visitor: vid });
+      $('rsend').disabled = false;
+      if (error) { $('rmsg').textContent = 'Could not send right now. Please try again later.'; return; }
+      try { localStorage.setItem('mw_req', JSON.stringify({ d: day, n: n + 1 })); } catch (x) {}
+      $('rtitle').value = ''; $('rartist').value = '';
+      $('rmsg').textContent = 'Thank you! Your request was sent.';
+    });
+  })();
+
   // Every time the site opens (or is refreshed) the playlist is shuffled, and the first song
   // is never the same one as last time, so listeners hear something different each visit.
   function shuffled(list, themeId) {
