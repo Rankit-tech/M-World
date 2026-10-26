@@ -92,6 +92,42 @@ dialog h2{margin-top:0}
 .acts{display:flex;gap:.6rem;justify-content:flex-end;margin:1rem 0 0}
 [hidden]{display:none!important}
 
+/* ===== animated sign in / sign out ===== */
+:root{--spring:cubic-bezier(.22,1.2,.36,1)}
+@keyframes rise{from{opacity:0;transform:translateY(20px) scale(.97);filter:blur(10px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes fall{to{opacity:0;transform:translateY(-14px) scale(.96);filter:blur(10px)}}
+@keyframes shake{15%{transform:translateX(-9px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(4px)}}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(26px,-18px) scale(1.15)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+#login{position:relative;max-width:410px;margin:9vh auto 0;overflow:hidden;text-align:center;padding:1.6rem 1.4rem 1.3rem}
+#login .lg-orb{position:absolute;inset:0;z-index:-1;pointer-events:none}
+#login .lg-orb i{position:absolute;width:210px;height:210px;border-radius:50%;filter:blur(46px);background:rgba(255,255,255,.14);animation:drift 9s ease-in-out infinite}
+#login .lg-orb i:first-child{left:-60px;top:-70px}
+#login .lg-orb i:last-child{right:-70px;bottom:-80px;animation-delay:-4s;background:rgba(255,255,255,.1)}
+#login .lg-mark{width:54px;height:54px;margin:0 auto .7rem;border-radius:18px;display:grid;place-items:center;font:700 1.5rem/1 inherit;color:var(--accent);background:var(--lg-fill),rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.38);box-shadow:var(--lg-edge)}
+#login h2{color:var(--ink);margin:0 0 .2rem;font-size:1.4rem}
+#login .fld{position:relative;margin:.7rem 0;text-align:left}
+#login .fld input{padding:1.15rem .9rem .45rem;transition:box-shadow .3s,border-color .3s}
+#login .fld label{position:absolute;left:.95rem;top:.85rem;margin:0;pointer-events:none;color:var(--mute);transition:transform .25s var(--spring),font-size .25s,color .25s;transform-origin:left top}
+#login .fld input:focus+label,#login .fld input:not(:placeholder-shown)+label{transform:translateY(-.55rem) scale(.78);color:var(--accent)}
+#login .fld input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 4px rgba(255,255,255,.12),inset 0 2px 6px rgba(0,0,0,.3)!important}
+#login .eye{position:absolute;right:.5rem;top:.5rem;padding:.25rem .7rem;font-size:.78rem}
+#login #go{position:relative;width:100%;margin-top:.5rem;padding:.85rem;display:grid;place-items:center;overflow:hidden}
+#login #go .bl{grid-area:1/1;transition:opacity .2s,transform .3s}
+#login #go .spin{grid-area:1/1;width:20px;height:20px;border-radius:50%;border:3px solid rgba(0,0,0,.25);border-top-color:#16181a;opacity:0;animation:spin .8s linear infinite;transition:opacity .2s}
+#login #go .tick{grid-area:1/1;width:24px;height:24px;fill:none;stroke:#16181a;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;opacity:0}
+#login #go.loading .bl{opacity:0;transform:translateY(-8px)}#login #go.loading .spin{opacity:1}
+#login #go.ok .bl{opacity:0}#login #go.ok .spin{opacity:0}#login #go.ok .tick{opacity:1;animation:draw .45s .05s ease-out forwards}
+#login.enter{animation:rise .75s var(--spring) both}
+#login.enter .st{animation:rise .7s var(--spring) both;animation-delay:calc(var(--i)*70ms + 140ms)}
+#login.shake{animation:shake .5s}
+#login.leave,#panel.leave{animation:fall .42s ease-in both}
+#panel.enter{animation:rise .6s var(--spring) both}
+#panel.enter .tabs button{animation:rise .5s var(--spring) both;animation-delay:calc(var(--k)*55ms + 160ms)}
+#out{transition:opacity .3s}
+@media (prefers-reduced-motion:reduce){#login,#login .st,#login .lg-orb i,#panel,#panel .tabs button{animation:none!important}}
+
 /* hide all scrollbars (scrolling still works) */
 *{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar{display:none;width:0;height:0}
@@ -109,6 +145,15 @@ button.ghost,.tabs button,.chips button,.ib{background:var(--lg-fill),rgba(255,2
 .menu{background:var(--lg-fill),rgba(20,10,12,.82)!important;-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);border:1px solid rgba(255,255,255,.32)!important;border-radius:1.1rem!important;box-shadow:var(--lg-edge),0 14px 36px rgba(0,0,0,.45)!important;animation:pop .35s var(--spring)}
 dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);border:1px solid rgba(255,255,255,.34)!important;border-radius:1.5rem!important;box-shadow:var(--lg-edge),0 24px 60px rgba(0,0,0,.5)}
 .wall,.tip,.stat{background:var(--lg-fill),rgba(255,255,255,.04)!important;border-color:rgba(255,255,255,.26)!important;box-shadow:var(--lg-edge);border-radius:1.2rem!important}
+/* upload cards */
+.ulist{display:grid;gap:.8rem;margin:.8rem 0}
+.ucard{border:1px solid rgba(255,255,255,.22);border-radius:1.2rem;padding:.8rem;background:rgba(255,255,255,.05);animation:pop .35s var(--spring)}
+.ucard .uh{display:flex;justify-content:space-between;align-items:center;gap:.6rem;margin-bottom:.4rem}
+.ucard .uh small{color:var(--mute);overflow-wrap:anywhere}
+.ucard .picks{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}
+.ucard .picks button{padding:.4rem .9rem;font-size:.85rem}
+.ucard .picks button.has{border-color:var(--accent)!important}
+.ucard .x{flex:none;width:32px;height:32px;padding:0}
 @keyframes pop{from{opacity:0;transform:scale(.88) translateY(-6px)}}
 </style>
 </head>
@@ -122,11 +167,14 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
   </section>
 
   <section class="card" id="login" hidden>
-    <h2>Sign in</h2>
-    <label for="em">Email</label><input id="em" type="email" autocomplete="username">
-    <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password">
-    <p><button id="go">Sign in</button></p>
-    <div class="msg" id="lmsg"></div>
+    <div class="lg-orb" aria-hidden="true"><i></i><i></i></div>
+    <div class="lg-mark st" style="--i:0" aria-hidden="true">M</div>
+    <h2 class="st" style="--i:1">Welcome back</h2>
+    <p class="hint st" style="--i:2">Sign in to manage M. World</p>
+    <div class="fld st" style="--i:3"><input id="em" type="email" placeholder=" " autocomplete="username"><label for="em">Email</label></div>
+    <div class="fld st" style="--i:4"><input id="pw" type="password" placeholder=" " autocomplete="current-password"><label for="pw">Password</label><button type="button" class="eye ghost" id="eye" aria-label="Show password">Show</button></div>
+    <button id="go" class="st" style="--i:5"><span class="bl">Sign in</span><i class="spin" aria-hidden="true"></i><svg class="tick" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    <div class="msg st" style="--i:6" id="lmsg"></div>
   </section>
 
   <div id="panel" hidden>
@@ -164,16 +212,11 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
     <!-- Upload -->
     <section class="card" data-pane="upload" role="tabpanel" hidden>
       <h2>Upload songs</h2>
-      <label for="file">Audio files (mp3, m4a, ogg or wav, up to 15 MB each). You can pick many at once.</label>
-      <input id="file" type="file" accept="audio/*" multiple>
-      <label for="wfile">Thumbnail (cover picture) for this song, optional. It shows in the music player. If you pick many songs, all get this picture.</label>
-      <input id="wfile" type="file" accept="image/jpeg,image/png,image/webp">
-      <label for="vfile">Background video for this song, optional (mp4 or webm, up to 50 MB). It plays silently behind the player while the song plays. Only used when you pick one song. Compress to 720p first for fast loading.</label>
-      <input id="vfile" type="file" accept="video/mp4,video/webm">
-      <div class="row">
-        <div><label for="title">Title (only when you pick one file; otherwise the file name is used)</label><input id="title" maxlength="120"></div>
-        <div><label for="artist">Artist</label><input id="artist" maxlength="120"></div>
-      </div>
+      <p class="hint">Add one or many songs. Each song is one card: you can rename it, and add its own thumbnail and background video, all before uploading.</p>
+      <input id="file" type="file" accept="audio/*" multiple hidden>
+      <button type="button" class="ghost" id="addfiles">+ Choose song files</button>
+      <small class="hint" style="display:block;margin-top:.4rem">mp3, m4a, ogg or wav, up to 15 MB each. Thumbnail: jpg, png or webp. Video: mp4 or webm, up to 50 MB (compress to 720p first).</small>
+      <div id="ulist" class="ulist"></div>
       <div class="row">
         <div><label for="theme">Which theme will play these songs?</label><select id="theme"></select></div>
         <div><label for="license">License</label>
@@ -335,72 +378,129 @@ dialog{background:var(--lg-fill),rgba(20,10,12,.8)!important;-webkit-backdrop-fi
   setInterval(()=>{if(!$('panel').hidden&&!document.querySelector('[data-pane=dash]').hidden)refreshStats()},60000);
 
   /* ---------- login ---------- */
+  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sleep=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
+  document.querySelectorAll('#tabbar button').forEach((b,k)=>b.style.setProperty('--k',k));
+  // Cross-fade between the sign-in card and the panel with a blur-and-rise animation.
+  async function swap(toPanel){
+    const from=toPanel?$('login'):$('panel'),to=toPanel?$('panel'):$('login');
+    if(!from.hidden){from.classList.add('leave');await sleep(420);from.classList.remove('leave')}
+    from.hidden=true;
+    if(!to.hidden&&to.classList.contains('enter'))return;
+    to.hidden=false;to.classList.remove('enter');void to.offsetWidth;to.classList.add('enter');
+    setTimeout(()=>to.classList.remove('enter'),1600);
+    $('out').hidden=!toPanel;
+  }
   async function route(){
     const {data}=await sb.auth.getSession();
-    if(!data.session){$('login').hidden=false;$('panel').hidden=true;$('out').hidden=true;return}
+    if(!data.session){await swap(false);$('out').hidden=true;return}
     const {data:ok}=await sb.rpc('is_admin');
-    if(!ok){$('login').hidden=false;$('panel').hidden=true;$('out').hidden=false;say($('lmsg'),'This account is not an admin.','err');return}
-    $('login').hidden=true;$('panel').hidden=false;$('out').hidden=false;
+    if(!ok){await swap(false);$('out').hidden=false;say($('lmsg'),'This account is not an admin.','err');return}
     startLive();
     let t='dash';try{t=sessionStorage.getItem('mw_tab')||'dash'}catch(e){}
     showTab(t);
+    await swap(true);
   }
+  $('eye').onclick=()=>{const p=$('pw'),s=p.type==='password';p.type=s?'text':'password';$('eye').textContent=s?'Hide':'Show';$('eye').setAttribute('aria-label',s?'Hide password':'Show password')};
+  $('pw').addEventListener('keydown',e=>{if(e.key==='Enter')$('go').click()});
+  $('em').addEventListener('keydown',e=>{if(e.key==='Enter')$('pw').focus()});
   $('go').onclick=async()=>{
-    say($('lmsg'),'Signing in...');
+    const go=$('go');if(go.classList.contains('loading'))return;
+    say($('lmsg'),'');go.classList.add('loading');go.disabled=true;
     const {error}=await sb.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});
-    if(error){say($('lmsg'),'Sign in failed. Check email and password.','err');return}
-    $('pw').value='';say($('lmsg'),'');route();
+    go.classList.remove('loading');go.disabled=false;
+    if(error){
+      say($('lmsg'),'Sign in failed. Check email and password.','err');
+      const L=$('login');L.classList.remove('shake');void L.offsetWidth;L.classList.add('shake');setTimeout(()=>L.classList.remove('shake'),600);
+      return;
+    }
+    go.classList.add('ok');await sleep(650);
+    $('pw').value='';go.classList.remove('ok');say($('lmsg'),'');route();
   };
   $('out').onclick=async()=>{await sb.auth.signOut();route()};
 
   /* ---------- upload ---------- */
   const safe=n=>n.toLowerCase().replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(-60)||'song';
   const nice=n=>n.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim().slice(0,120)||'Untitled';
+  /* each chosen song is one card with its own name, artist, thumbnail and video */
+  let items=[];
+  const fsize=f=>(f.size/1048576).toFixed(1)+' MB';
+  function renderItems(){
+    const box=$('ulist');box.textContent='';
+    items.forEach((it,n)=>{
+      const c=document.createElement('div');c.className='ucard';
+      const h=document.createElement('div');h.className='uh';
+      const fn=document.createElement('small');fn.textContent=it.audio.name+' ('+fsize(it.audio)+')';
+      const x=document.createElement('button');x.type='button';x.className='ghost x';x.textContent='✕';x.setAttribute('aria-label','Remove this song');
+      x.onclick=()=>{items.splice(n,1);renderItems()};
+      h.append(fn,x);
+      const row=document.createElement('div');row.className='row';
+      const mk=(label,key,max)=>{const d=document.createElement('div');const l=document.createElement('label');l.textContent=label;const i=document.createElement('input');i.value=it[key];i.maxLength=max;i.oninput=()=>{it[key]=i.value};d.append(l,i);return d};
+      row.append(mk('Song name','title',120),mk('Artist','artist',120));
+      const picks=document.createElement('div');picks.className='picks';
+      const pick=(label,key,accept,okRe,maxMb)=>{
+        const inp=document.createElement('input');inp.type='file';inp.accept=accept;inp.hidden=true;
+        const b=document.createElement('button');b.type='button';b.className='ghost'+(it[key]?' has':'');
+        b.textContent=it[key]?label+': '+it[key].name.slice(0,22)+' ✓':'+ '+label;
+        b.onclick=()=>inp.click();
+        inp.onchange=()=>{
+          const f=inp.files[0];if(!f)return;
+          if(!okRe.test(f.type)){say($('umsg'),label+' has the wrong file type.','err');return}
+          if(f.size>maxMb*1048576){say($('umsg'),label+' is bigger than '+maxMb+' MB.','err');return}
+          say($('umsg'),'');it[key]=f;renderItems();
+        };
+        picks.append(b,inp);
+        if(it[key]){const r=document.createElement('button');r.type='button';r.className='ghost';r.textContent='Remove '+label.toLowerCase();r.onclick=()=>{it[key]=null;renderItems()};picks.append(r)}
+      };
+      pick('Thumbnail','thumb','image/jpeg,image/png,image/webp',/^image\//,10);
+      pick('Video','video','video/mp4,video/webm',/^video\/(mp4|webm)$/,50);
+      c.append(h,row,picks);box.append(c);
+    });
+  }
+  $('addfiles').onclick=()=>$('file').click();
+  $('file').onchange=()=>{
+    const bad=[];
+    [...$('file').files].forEach(f=>{
+      if(!f.type.startsWith('audio/')){bad.push(f.name+' is not audio');return}
+      if(f.size>15*1024*1024){bad.push(f.name+' is bigger than 15 MB (convert to 128 kbps mp3)');return}
+      items.push({audio:f,title:nice(f.name),artist:'',thumb:null,video:null});
+    });
+    $('file').value='';renderItems();
+    say($('umsg'),bad.join('; '),bad.length?'err':'');
+  };
   $('up').onclick=async()=>{
-    const files=[...$('file').files];
-    if(!files.length){say($('umsg'),'Choose at least one audio file.','err');return}
-    for(const f of files){
-      if(!f.type.startsWith('audio/')){say($('umsg'),f.name+' is not an audio file.','err');return}
-      if(f.size>15*1024*1024){say($('umsg'),f.name+' is bigger than 15 MB. Convert it to 128 kbps mp3 first.','err');return}
-    }
-    const theme=$('theme').value,single=files.length===1&&$('title').value.trim();
-    const wf=$('wfile').files[0];
-    if(wf&&!wf.type.startsWith('image/')){say($('umsg'),'The thumbnail must be an image.','err');return}
-    const vf=$('vfile').files[0];let vfail='';
-    if(vf){
-      if(!/^video\/(mp4|webm)$/.test(vf.type)){say($('umsg'),'The video must be mp4 or webm.','err');return}
-      if(vf.size>50*1024*1024){say($('umsg'),'The video is bigger than 50 MB. Compress it to 720p first.','err');return}
-      if(files.length!==1){say($('umsg'),'A video can only be added when you upload one song at a time.','err');return}
-    }
-    $('up').disabled=true;let done=0,fail=[],wfail=0,wblob=null;
-    if(wf){try{wblob=await shrink(wf,true)}catch(e){say($('umsg'),'Thumbnail problem: '+e.message,'err');$('up').disabled=false;return}}
-    for(const f of files){
-      say($('umsg'),'Uploading '+(done+fail.length+1)+' of '+files.length+'...');
-      const path=theme+'/'+Date.now()+'-'+safe(f.name);
-      const u=await sb.storage.from('songs').upload(path,f,{contentType:f.type,upsert:false});
-      if(u.error){fail.push(f.name+': '+u.error.message);continue}
-      const r=await sb.from('songs').insert({title:single||nice(f.name),artist:$('artist').value.trim()||null,theme,file_path:path,license:$('license').value,credit:$('credit').value.trim()||null}).select('id').single();
-      if(r.error){await sb.storage.from('songs').remove([path]);fail.push(f.name+': '+r.error.message);continue}
-      if(vf&&files.length===1){
-        const vp=theme+'/'+Date.now()+'-v-'+safe(vf.name);
-        const vu=await sb.storage.from('songs').upload(vp,vf,{contentType:vf.type,upsert:false});
+    if(!items.length){say($('umsg'),'Choose at least one song file first.','err');return}
+    if(items.some(it=>!it.title.trim())){say($('umsg'),'Every song needs a name.','err');return}
+    const theme=$('theme').value;
+    $('up').disabled=true;let done=0,fail=[],extra=[];
+    const queue=items.slice();
+    for(const it of queue){
+      say($('umsg'),'Uploading '+(done+fail.length+1)+' of '+queue.length+': '+it.title+'...');
+      const path=theme+'/'+Date.now()+'-'+safe(it.audio.name);
+      const u=await sb.storage.from('songs').upload(path,it.audio,{contentType:it.audio.type,upsert:false});
+      if(u.error){fail.push(it.title+': '+u.error.message);continue}
+      const r=await sb.from('songs').insert({title:it.title.trim(),artist:it.artist.trim()||null,theme,file_path:path,license:$('license').value,credit:$('credit').value.trim()||null}).select('id').single();
+      if(r.error){await sb.storage.from('songs').remove([path]);fail.push(it.title+': '+r.error.message);continue}
+      if(it.video){
+        const vp=theme+'/'+Date.now()+'-v-'+safe(it.video.name);
+        const vu=await sb.storage.from('songs').upload(vp,it.video,{contentType:it.video.type,upsert:false});
         const vr=vu.error?vu:await sb.from('songs').update({video_path:vp}).eq('id',r.data.id);
-        if(vr.error){vfail=vr.error.message;if(!vu.error)await sb.storage.from('songs').remove([vp])}
+        if(vr.error){extra.push(it.title+' video: '+vr.error.message+(/video_path|mime|size/i.test(vr.error.message)?' (run supabase/update-v10.sql)':''));if(!vu.error)await sb.storage.from('songs').remove([vp])}
       }
-      if(wblob){
-        const wp='songs/'+r.data.id+'-'+Date.now()+'.jpg';
-        const wu=await sb.storage.from('wallpapers').upload(wp,wblob,{contentType:'image/jpeg',upsert:false});
-        const wr=wu.error?wu:await sb.from('songs').update({wallpaper_path:wp}).eq('id',r.data.id);
-        if(wr.error){wfail++;if(!wu.error)await sb.storage.from('wallpapers').remove([wp])}
+      if(it.thumb){
+        try{
+          const blob=await shrink(it.thumb,true);
+          const wp='songs/'+r.data.id+'-'+Date.now()+'.jpg';
+          const wu=await sb.storage.from('wallpapers').upload(wp,blob,{contentType:'image/jpeg',upsert:false});
+          const wr=wu.error?wu:await sb.from('songs').update({wallpaper_path:wp}).eq('id',r.data.id);
+          if(wr.error){extra.push(it.title+' thumbnail: '+wr.error.message);if(!wu.error)await sb.storage.from('wallpapers').remove([wp])}
+        }catch(e){extra.push(it.title+' thumbnail: '+e.message)}
       }
-      done++;
+      done++;items.splice(items.indexOf(it),1);renderItems();
     }
     $('up').disabled=false;
-    if(fail.length)say($('umsg'),done+' uploaded. Failed: '+fail.join('; '),'err');
-    else if(vfail)say($('umsg'),'Song uploaded, but the video failed: '+vfail+(/video_path/.test(vfail)||/mime|size/i.test(vfail)?' Run supabase/update-v10.sql in the Supabase SQL Editor.':''),'err');
-    else if(wfail)say($('umsg'),done+' song(s) uploaded, but the thumbnail failed for '+wfail+'. Run supabase/update-v4.sql and update-v5.sql, then set it from the Songs tab.','err');
-    else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'".'+(wblob?' Thumbnail added.':'')+' Open the Songs tab to see them.','ok');
-    $('file').value='';$('wfile').value='';$('vfile').value='';$('title').value='';
+    if(fail.length||extra.length)say($('umsg'),done+' uploaded.'+(fail.length?' Failed: '+fail.join('; ')+'.':'')+(extra.length?' Problems: '+extra.join('; ')+'.':''),'err');
+    else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'". Open the Songs tab to see them.','ok');
   };
 
   /* ---------- wallpapers ---------- */
