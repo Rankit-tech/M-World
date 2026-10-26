@@ -51,7 +51,7 @@
   // The big background photo always stays the theme photo.
   function applyBg() {
     const s = songs[idx], art = $('art'), hb = $('herobg'), hv = $('herovid');
-    const url = PHOTOS[S[cur].id];
+    const url = (S[cur].id === 'bus' && PHOTOS.bus === DEFAULT_PHOTOS.bus) ? '' : PHOTOS[S[cur].id];
     if (!window.__wallPending) {
       if (url) { hb.style.backgroundImage = 'url("' + url + '")'; hb.hidden = false; } else hb.hidden = !hv.src || hv.hidden;
     }
