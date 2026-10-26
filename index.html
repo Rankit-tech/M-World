@@ -301,6 +301,12 @@ header #menuBtn{padding:.5rem 1rem}
 @keyframes drive{from{transform:translateX(0)}to{transform:translateX(calc(100vw + 140%))}}
 @keyframes twinkle{50%{opacity:.35}}
 @media(prefers-reduced-motion:reduce){.busfx *{animation:none!important}}
+
+.shgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem}
+.shgrid button{display:grid;gap:.25rem;justify-items:center;padding:.65rem .3rem;border-radius:1rem;font:600 .78rem var(--body);background:var(--lg-fill),rgba(255,255,255,.07)!important;color:var(--ink)!important;border:1px solid rgba(255,255,255,.28)!important;box-shadow:var(--lg-edge)}
+.shgrid button svg{width:22px;height:22px;fill:currentColor}
+.shgrid button:hover{background:rgba(255,255,255,.16)!important}
+#shdlg{max-width:min(24rem,94vw)}
 </style>
 </head>
 <body data-theme="salon">
@@ -365,6 +371,13 @@ header #menuBtn{padding:.5rem 1rem}
   <p>© M. World. An independent nostalgia radio. Songs belong to their artists and labels.</p>
 </footer>
 <button id="floatPause" hidden aria-label="Pause music"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg><span>Pause music</span></button>
+<dialog id="shdlg"><div style="display:grid;gap:.8rem">
+  <p class="dt" style="margin:0;text-align:center">Share this song</p>
+  <img id="shimg" alt="Share card preview" style="width:100%;max-height:34vh;object-fit:contain;border-radius:14px;background:rgba(255,255,255,.06)">
+  <div class="shgrid" id="shgrid"></div>
+  <p id="shmsg" class="ds" style="margin:0;text-align:center;min-height:1.2em"></p>
+  <button type="button" id="shclose">Close</button>
+</div></dialog>
 <dialog id="rdlg"><form method="dialog" id="rform" style="text-align:left;display:grid;gap:.6rem">
   <p class="dt" style="margin:0;text-align:center">Request a song</p>
   <p class="ds" style="margin:0;text-align:center">Tell us which old song you miss. We read every request.</p>
@@ -647,6 +660,6 @@ if(window.claude&&claude.use){
 tune(0);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=26"></script>
+<script src="backend.js?v=27"></script>
 </body>
 </html>

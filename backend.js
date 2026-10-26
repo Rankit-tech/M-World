@@ -183,51 +183,77 @@
     c.fillText(location.host + location.pathname.replace(/[^/]*$/, ''), W / 2, H - 70); c.globalAlpha = 1;
     return new Promise(res => cv.toBlob(res, 'image/png'));
   }
-  $('shareBtn').onclick = async () => {
-    const btn = $('shareBtn'); if (!songs.length) return;
-    btn.disabled = true;
-    const link = location.origin + location.pathname;
-    const text = '♪ ' + songs[idx].title + ' on M. World';
-    try {
-      const blob = await makeCard();
-      const file = blob && new File([blob], 'm-world-now-playing.png', { type: 'image/png' });
-      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], text: text + '\n' + link, title: 'M. World' });
-      } else if (blob) {
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'm-world-now-playing.png';
-        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-        try { await navigator.clipboard.writeText(text + '\n' + link); } catch (e) {}
-      }
-    } catch (e) { /* the person closed the share sheet */ }
-    btn.disabled = false;
+  // Custom share sheet: preview of the picture + one-tap buttons.
+  const ICON = {
+    pic: 'M4 5h16v14H4zm2 2v10h12V7zm2 8 2.5-3 2 2.500L15 11l3 4z',
+    wa: 'M12 3a9 9 0 0 0-7.800 13.500L3 21l4.600-1.200A9 9 0 1 0 12 3zm4.600 12.400c-.2.600-1.200 1.100-1.700 1.200-.4.100-1 .1-1.600-.1-.4-.1-.9-.3-1.500-.600-2.600-1.100-4.300-3.700-4.400-3.900-.1-.2-1-1.300-1-2.500s.6-1.800.9-2c.2-.2.500-.3.700-.3h.5c.2 0 .4 0 .6.500l.8 1.900c.1.200.1.300 0 .5l-.3.400-.3.300c-.1.100-.3.300-.1.600.2.300.8 1.300 1.700 2.100 1.100 1 2.100 1.300 2.400 1.400.3.100.4.100.6-.1l.8-.9c.2-.3.4-.2.600-.1l1.800.9c.3.100.4.200.5.300.1.200.1.800-.1 1.400z',
+    tg: 'M20.700 4.300 3.400 11c-1.200.5-1.100 1.100-.2 1.400l4.400 1.400 1.700 5.200c.2.500.1.700.6.700.4 0 .6-.2.800-.4l2.100-2 4.400 3.200c.8.400 1.400.2 1.600-.8L22 5.600c.3-1.200-.5-1.700-1.300-1.300zM9 13.700l9.100-5.700c.4-.3.800-.1.500.2l-7.600 6.800-.3 3.300z',
+    x: 'M17.500 3h3.100l-6.800 7.700L21.800 21h-6.200l-4.900-6.400L5 21H1.900l7.200-8.300L1.500 3h6.400l4.400 5.800zm-1.100 16.200h1.700L6.900 4.700H5.100z',
+    link: 'M10.600 13.400a3 3 0 0 0 4.200 0l3.500-3.500a3 3 0 0 0-4.200-4.200l-1.100 1.100 1.400 1.400 1.100-1.100a1 1 0 1 1 1.400 1.400l-3.500 3.500a1 1 0 0 1-1.400 0zm2.800-2.800a3 3 0 0 0-4.200 0L5.700 14.100a3 3 0 0 0 4.200 4.200l1.100-1.100-1.400-1.400-1.100 1.100a1 1 0 1 1-1.400-1.400l3.500-3.500a1 1 0 0 1 1.400 0z',
+    save: 'M12 3v10.200l3.600-3.600 1.400 1.400-6 6-6-6 1.400-1.400L11 13.200V3zM5 19h14v2H5z',
+    share: 'M18 16.100c-.8 0-1.500.3-2 .8l-7.100-4.200c.1-.2.1-.5.1-.7s0-.5-.1-.7L16 7.200c.5.5 1.200.8 2 .8 1.700 0 3-1.300 3-3s-1.300-3-3-3-3 1.300-3 3c0 .2 0 .5.1.7L8 9.800C7.500 9.300 6.800 9 6 9c-1.700 0-3 1.300-3 3s1.300 3 3 3c.8 0 1.500-.3 2-.8l7.100 4.200c-.1.200-.1.400-.1.600 0 1.600 1.300 2.900 2.900 2.900s2.900-1.300 2.900-2.900-1.200-2.900-2.800-2.900z'
   };
-
-  // ---------- Song requests ----------
-  (function () {
-    const dlg = $('rdlg'); if (!dlg) return;
-    $('reqBtn').onclick = () => {
-      $('rtheme').innerHTML = '<option value="">Any station</option>' + S.filter(t => !HIDDEN.has(t.id))
-        .map(t => '<option value="' + t.id + '"' + (t.id === S[cur].id ? ' selected' : '') + '>' + t.tab + '</option>').join('');
-      $('rmsg').textContent = ''; dlg.showModal();
+  let cardBlob = null, cardUrl = '';
+  async function makeCardJpeg() {
+    const png = await makeCard();            // draws the card
+    if (!png) return null;
+    const im = await loadImg(URL.createObjectURL(png));
+    const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height;
+    const c = cv.getContext('2d'); c.fillStyle = '#121416'; c.fillRect(0, 0, cv.width, cv.height); c.drawImage(im, 0, 0);
+    return new Promise(res => cv.toBlob(res, 'image/jpeg', .88));   // about 10x smaller than PNG
+  }
+  function openShare() {
+    if (!songs.length) return;
+    const dlg = $('shdlg'), grid = $('shgrid'), msg = $('shmsg');
+    const link = location.origin + location.pathname, text = '♪ ' + songs[idx].title + ' on M. World';
+    grid.textContent = ''; msg.textContent = 'Making your picture...'; $('shimg').removeAttribute('src');
+    cardBlob = null;
+    const add = (label, icon, fn) => {
+      const b = document.createElement('button'); b.type = 'button';
+      b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + ICON[icon] + '"/></svg><span></span>';
+      b.lastChild.textContent = label; b.onclick = fn; grid.append(b); return b;
     };
-    $('rcancel').onclick = () => dlg.close();
-    $('rform').addEventListener('submit', async e => {
-      e.preventDefault();
-      const title = $('rtitle').value.trim(); if (!title) return;
-      let n = 0, day = new Date().toDateString();
-      try { const o = JSON.parse(localStorage.getItem('mw_req') || '{}'); n = o.d === day ? o.n : 0; } catch (x) {}
-      if (n >= 5) { $('rmsg').textContent = 'That is enough for today. Please come back tomorrow.'; return; }
-      $('rsend').disabled = true;
-      const { error } = await sb.from('song_requests').insert({
-        title: title.slice(0, 120), artist: $('rartist').value.trim().slice(0, 80) || null,
-        theme: $('rtheme').value || null, visitor: vid });
-      $('rsend').disabled = false;
-      if (error) { $('rmsg').textContent = 'Could not send right now. Please try again later.'; return; }
-      try { localStorage.setItem('mw_req', JSON.stringify({ d: day, n: n + 1 })); } catch (x) {}
-      $('rtitle').value = ''; $('rartist').value = '';
-      $('rmsg').textContent = 'Thank you! Your request was sent.';
+    const say = t => { msg.textContent = t; };
+    const open = u => window.open(u, '_blank', 'noopener');
+    const file = () => cardBlob && new File([cardBlob], 'm-world-now-playing.jpg', { type: 'image/jpeg' });
+    add('WhatsApp', 'wa', () => open('https://wa.me/?text=' + encodeURIComponent(text + '\n' + link)));
+    add('Telegram', 'tg', () => open('https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text)));
+    add('X', 'x', () => open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(link)));
+    add('Copy link', 'link', async () => { try { await navigator.clipboard.writeText(link); say('Link copied.'); } catch (e) { say(link); } });
+    add('Save picture', 'save', () => {
+      if (!cardBlob) return say('One moment, the picture is not ready yet.');
+      const a = document.createElement('a'); a.href = cardUrl; a.download = 'm-world-now-playing.jpg';
+      document.body.appendChild(a); a.click(); a.remove(); say('Saved. Post it on Instagram or WhatsApp status.');
     });
-  })();
+    if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+      add('Copy picture', 'pic', async () => {
+        if (!cardBlob) return say('One moment, the picture is not ready yet.');
+        try {
+          const im = await loadImg(cardUrl), cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height;
+          cv.getContext('2d').drawImage(im, 0, 0);
+          const png = await new Promise(r => cv.toBlob(r, 'image/png'));
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]); say('Picture copied. Paste it in a chat.');
+        } catch (e) { say('Could not copy. Use Save picture.'); }
+      });
+    }
+    if (navigator.share && navigator.canShare) {
+      add('More apps', 'share', async () => {
+        const f = file();
+        try {
+          if (f && navigator.canShare({ files: [f] })) await navigator.share({ files: [f], text: text + '\n' + link, title: 'M. World' });
+          else await navigator.share({ text, url: link, title: 'M. World' });
+        } catch (e) {}
+      });
+    }
+    try { dlg.showModal(); } catch (e) {}
+    makeCardJpeg().then(bl => {
+      if (!bl) { say('Could not make the picture.'); return; }
+      cardBlob = bl; if (cardUrl) URL.revokeObjectURL(cardUrl); cardUrl = URL.createObjectURL(bl);
+      $('shimg').src = cardUrl; say('');
+    });
+  }
+  $('shareBtn').onclick = openShare;
+  $('shclose').onclick = () => $('shdlg').close();
 
   // Every time the site opens (or is refreshed) the playlist is shuffled, and the first song
   // is never the same one as last time, so listeners hear something different each visit.
