@@ -471,22 +471,45 @@ dialog{background:var(--lg-fill),rgba(18,20,22,.8)!important;-webkit-backdrop-fi
     $('file').value='';renderItems();
     say($('umsg'),bad.join('; '),bad.length?'err':'');
   };
-  $('up').onclick=async()=>{
+  // Upload with a live percentage, a clear error text and a 5 minute limit (the plain upload shows nothing while it waits).
+  async function putFile(bucket,path,file,onp){
+    let tok='';try{const s=await sb.auth.getSession();tok=(s.data&&s.data.session&&s.data.session.access_token)||''}catch(e){}
+    const cfg=window.MWORLD||{};
+    return new Promise(res=>{
+      const x=new XMLHttpRequest();
+      x.open('POST',cfg.url+'/storage/v1/object/'+bucket+'/'+path.split('/').map(encodeURIComponent).join('/'));
+      x.setRequestHeader('Authorization','Bearer '+(tok||cfg.anonKey));x.setRequestHeader('apikey',cfg.anonKey);
+      x.setRequestHeader('x-upsert','false');x.setRequestHeader('Content-Type',file.type||'application/octet-stream');
+      x.timeout=300000;
+      x.upload.onprogress=e=>{if(e.lengthComputable&&onp)onp(e.loaded,e.total)};
+      x.onload=()=>{
+        if(x.status>=200&&x.status<300)return res({});
+        let m=x.responseText;try{m=JSON.parse(m).message||m}catch(e){}
+        res({error:{message:(m||'HTTP '+x.status)+(x.status===413?' (file too big for the storage limit)':'')}});
+      };
+      x.onerror=()=>res({error:{message:'Network error. Check your internet and try again.'}});
+      x.ontimeout=()=>res({error:{message:'Upload timed out after 5 minutes. Try a smaller file or a better connection.'}});
+      x.send(file);
+    });
+  }
+  const doUpload=async()=>{
     if(!items.length){say($('umsg'),'Choose at least one song file first.','err');return}
     if(items.some(it=>!it.title.trim())){say($('umsg'),'Every song needs a name.','err');return}
     const theme=$('theme').value;
     $('up').disabled=true;let done=0,fail=[],extra=[];
     const queue=items.slice();
     for(const it of queue){
-      say($('umsg'),'Uploading '+(done+fail.length+1)+' of '+queue.length+': '+it.title+'...');
+      const label='Uploading '+(done+fail.length+1)+' of '+queue.length+': '+it.title;
+      say($('umsg'),label+' ...');
       const path=theme+'/'+Date.now()+'-'+safe(it.audio.name);
-      const u=await sb.storage.from('songs').upload(path,it.audio,{contentType:it.audio.type,upsert:false});
+      const mb=n=>(n/1048576).toFixed(1);
+      const u=await putFile('songs',path,it.audio,(l,t)=>say($('umsg'),label+' - '+Math.round(l/t*100)+'% ('+mb(l)+' of '+mb(t)+' MB). Please keep this page open.'));
       if(u.error){fail.push(it.title+': '+u.error.message);continue}
       const r=await sb.from('songs').insert({title:it.title.trim(),artist:it.artist.trim()||null,theme,file_path:path,license:$('license').value,credit:$('credit').value.trim()||null}).select('id').single();
       if(r.error){await sb.storage.from('songs').remove([path]);fail.push(it.title+': '+r.error.message);continue}
       if(it.video){
         const vp=theme+'/'+Date.now()+'-v-'+safe(it.video.name);
-        const vu=await sb.storage.from('songs').upload(vp,it.video,{contentType:it.video.type,upsert:false});
+        const vu=await putFile('songs',vp,it.video,(l,t)=>say($('umsg'),label+' video - '+Math.round(l/t*100)+'% ('+mb(l)+' of '+mb(t)+' MB). Please keep this page open.'));
         const vr=vu.error?vu:await sb.from('songs').update({video_path:vp}).eq('id',r.data.id);
         if(vr.error){extra.push(it.title+' video: '+vr.error.message+(/video_path|mime|size/i.test(vr.error.message)?' (run supabase/update-v10.sql)':''));if(!vu.error)await sb.storage.from('songs').remove([vp])}
       }
@@ -504,6 +527,9 @@ dialog{background:var(--lg-fill),rgba(18,20,22,.8)!important;-webkit-backdrop-fi
     $('up').disabled=false;
     if(fail.length||extra.length)say($('umsg'),done+' uploaded.'+(fail.length?' Failed: '+fail.join('; ')+'.':'')+(extra.length?' Problems: '+extra.join('; ')+'.':''),'err');
     else say($('umsg'),done+' song(s) uploaded to "'+THEMES[theme]+'". Open the Songs tab to see them.','ok');
+  };
+  $('up').onclick=async()=>{
+    try{await doUpload()}catch(e){say($('umsg'),'Upload stopped: '+(e&&e.message||e),'err');$('up').disabled=false}
   };
 
   /* ---------- wallpapers ---------- */
