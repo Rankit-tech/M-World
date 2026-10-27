@@ -19,7 +19,9 @@
 <meta name="twitter:title" content="M. World | Free old Hindi songs radio">
 <meta name="twitter:description" content="Old Hindi songs, one free radio. Pick a mood and press play.">
 <meta name="twitter:image" content="https://rankit-tech.github.io/M-World/assets/og.png">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23121416'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' font-family='sans-serif' font-weight='700' fill='%23f7ecd4'%3EM%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"M. World","url":"https://rankit-tech.github.io/M-World/","description":"A free nostalgic Indian radio playing old Hindi film songs by mood."}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -359,7 +361,7 @@ header #menuBtn{padding:.5rem 1rem}
 <div class="herobg" id="herobg" hidden><video id="herovid" muted loop playsinline preload="none" hidden></video></div>
 <canvas class="rain" id="rain" aria-hidden="true" hidden></canvas>
 <header>
-  <div class="left"><div class="brand">M. World</div><div class="live" id="live">212 online</div></div>
+  <div class="left"><div class="brand"><img src="assets/logo-mark.svg" alt="" width="34" height="23" style="vertical-align:-3px;margin-right:.5rem">M. World</div><div class="live" id="live">212 online</div></div>
   <div class="links"><a href="#aboutus">About</a><a href="#faq">FAQ</a><button id="supportTop">Support</button></div>
   <div class="menu"><button id="menuBtn" aria-haspopup="true" aria-expanded="false">Change Theme</button><div class="drop" id="tabs" aria-label="Stations" hidden></div></div>
 </header>
@@ -431,7 +433,7 @@ header #menuBtn{padding:.5rem 1rem}
   <p id="rmsg" class="ds" style="margin:0;text-align:center;min-height:1.2em"></p>
   <div style="display:flex;gap:.6rem;justify-content:center"><button type="submit" id="rsend">Send request</button><button type="button" id="rcancel">Close</button></div>
 </form></dialog>
-<dialog id="dlg"><div class="heart" aria-hidden="true" style="font-size:1.6rem">❤️</div><p class="dt" tabindex="-1" autofocus>These old songs stay alive because of you</p><p class="ds">M. World is run by one person. Every song, every server bill, every late night. If these songs made your day even a little lighter, please send whatever you can and help keep this radio going. Your small gift means the world to me.</p><p class="perk">✨ Supporters keep M. World <b>ad-free for life</b>. No ads, ever.</p><img class="qr" alt="UPI payment QR code" src="assets/qr.png"><p class="ds2">Scan with any UPI app. Thank you 🙏</p><button id="close">Maybe later</button></dialog>
+<dialog id="dlg"><div class="heart" aria-hidden="true" style="font-size:1.6rem">❤️</div><p class="dt" tabindex="-1" autofocus>These old songs stay alive because of you</p><p class="ds">M. World is run by one person. Every song, every server bill, every late night. If these songs made your day even a little lighter, please send whatever you can and help keep this radio going. Your small gift means the world to me.</p><p class="perk">✨ Supporters keep M. World <b>ad-free for life</b>. No ads, ever.</p><img class="qr" alt="UPI payment QR code" src="assets/qr.png?v=2"><p class="ds2">Scan with any UPI app. Thank you 🙏</p><button id="close">Maybe later</button></dialog>
 
 <script src="config.js?v=3"></script>
 <script>
@@ -704,6 +706,6 @@ if(window.claude&&claude.use){
 tune(0);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="backend.js?v=31"></script>
+<script src="backend.js?v=32"></script>
 </body>
 </html>
