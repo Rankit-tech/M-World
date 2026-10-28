@@ -79,3 +79,7 @@ Run these in the Supabase SQL Editor, in order, after update-v7.sql:
 ## Update v10 (background video for a song)
 
 Run `supabase/update-v10.sql` once, after update-v9.sql. Then in the admin panel you can add a short mp4 or webm (up to 50 MB) to a song, either in the Upload tab (one song at a time) or from the three-dot menu in the Songs tab. The video plays silently behind the player while that song plays, and stops when the music pauses. It is skipped for visitors who use data saver or reduced motion.
+
+## Update v11 (security hardening)
+
+Run `supabase/update-v11.sql` once, after update-v10.sql. It adds limits so bots cannot spam the site: plays and visits are rate limited per visitor and site-wide, chat allows 12 messages a minute per person (and a site-wide cap), song requests are limited to 5 a day per visitor, hidden control characters are stripped, and visitors lose any update/delete rights on every table. You (signed in as admin) are never limited. The pages also now carry a Content Security Policy, a clickjacking guard and a referrer policy. GitHub Pages cannot send real security headers, so these meta tags are the best available.
