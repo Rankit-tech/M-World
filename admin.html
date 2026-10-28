@@ -491,7 +491,12 @@ dialog{background:var(--lg-fill),rgba(18,20,22,.8)!important;-webkit-backdrop-fi
         let m=x.responseText;try{m=JSON.parse(m).message||m}catch(e){}
         res({error:{message:(m||'HTTP '+x.status)+(x.status===413?' (file too big for the storage limit)':'')}});
       };
-      x.onerror=()=>res({error:{message:'Network error. Check your internet and try again.'}});
+      x.onerror=async()=>{
+        const mb=(file.size/1048576).toFixed(1)+' MB';let why;
+        try{await fetch(cfg.url+'/rest/v1/',{headers:{apikey:cfg.anonKey}});
+          why='Supabase is reachable, but it refused this '+mb+' file. Most likely the file is over the storage size limit (run supabase/update-v10.sql for 50 MB, and check Supabase > Storage > Settings > upload size limit) or the file type is not allowed.'}
+        catch(e){why='Cannot reach Supabase at all. Most likely your project is paused (free plan pauses after 7 days idle): open supabase.com > your project > click Restore. Otherwise an ad-blocker, VPN or antivirus is blocking supabase.co.'}
+        res({error:{message:why}})};
       x.ontimeout=()=>res({error:{message:'Upload timed out after 5 minutes. Try a smaller file or a better connection.'}});
       x.send(file);
     });
