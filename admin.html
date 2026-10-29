@@ -160,6 +160,28 @@ dialog{background:var(--lg-fill),rgba(18,20,22,.8)!important;-webkit-backdrop-fi
 .ucard .x{flex:none;width:32px;height:32px;padding:0}
 @keyframes pop{from{opacity:0;transform:scale(.88) translateY(-6px)}}
 .srch{display:flex;gap:.5rem;margin:.2rem 0 .7rem}.srch input{flex:1;min-width:0}.srch button{padding:.4rem .9rem}
+/* ===== Dashboard motion: staggered cards, count-up numbers, chart that grows, bars that fill ===== */
+@keyframes paneIn{from{opacity:0;transform:translateY(16px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes statIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes growY{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes fillX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes sheen{from{transform:translateX(-120%)}to{transform:translateX(120%)}}
+@keyframes liveDot{0%{box-shadow:0 0 0 0 rgba(52,209,122,.55)}100%{box-shadow:0 0 0 10px rgba(52,209,122,0)}}
+[data-pane]:not([hidden]){animation:paneIn .5s cubic-bezier(.2,.8,.2,1) both}
+.stat{position:relative;overflow:hidden;animation:statIn .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--n,0)*70ms);transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s}
+.stat:hover{transform:translateY(-3px)}
+.stat::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.12) 50%,transparent 70%);transform:translateX(-120%);pointer-events:none}
+.stat:hover::after{animation:sheen .9s ease}
+.stat b{font-variant-numeric:tabular-nums}
+.stat.live span::before{content:"";display:inline-block;width:.55rem;height:.55rem;margin-right:.45rem;border-radius:50%;background:#34d17a;animation:liveDot 1.8s ease-out infinite}
+.chart div{transform-origin:bottom;animation:growY .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--n,0)*45ms + .25s);transition:filter .2s,background .2s}
+.chart div:hover{filter:brightness(1.25)}
+.chart div:last-child{box-shadow:0 0 14px rgba(255,255,255,.35)}
+.top{list-style:none;padding-left:0;display:grid;gap:.55rem}
+.top li{position:relative;padding:.5rem .7rem;border-radius:.8rem;background:rgba(255,255,255,.05);border:1px solid var(--line);overflow:hidden;color:var(--fg,#e9ecef);animation:statIn .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--n,0)*80ms + .3s)}
+.top li .tb{position:absolute;left:0;bottom:0;height:3px;width:var(--w,0%);background:var(--accent);border-radius:0 3px 0 0;transform-origin:left;animation:fillX 1s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--n,0)*80ms + .5s)}
+.top li small{display:block;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){[data-pane]:not([hidden]),.stat,.chart div,.top li,.top li .tb,.stat.live span::before{animation:none!important}}
 </style>
 </head>
 <body>
@@ -197,13 +219,13 @@ dialog{background:var(--lg-fill),rgba(18,20,22,.8)!important;-webkit-backdrop-fi
     <section class="card" data-pane="dash" role="tabpanel">
       <h2>Dashboard</h2>
       <div class="stats">
-        <div class="stat live"><b id="s_live">-</b><span>Live now</span></div>
-        <div class="stat"><b id="s_tv">-</b><span>Visitors today</span></div>
-        <div class="stat"><b id="s_tvis">-</b><span>Visits today</span></div>
-        <div class="stat"><b id="s_total">-</b><span>Total visitors</span></div>
-        <div class="stat"><b id="s_songs">-</b><span>Songs uploaded</span></div>
-        <div class="stat"><b id="s_plays">-</b><span>Listens today</span></div>
-        <div class="stat"><b id="s_msgs">-</b><span>Chat messages today</span></div>
+        <div class="stat live" style="--n:0"><b id="s_live">-</b><span>Live now</span></div>
+        <div class="stat" style="--n:1"><b id="s_tv">-</b><span>Visitors today</span></div>
+        <div class="stat" style="--n:2"><b id="s_tvis">-</b><span>Visits today</span></div>
+        <div class="stat" style="--n:3"><b id="s_total">-</b><span>Total visitors</span></div>
+        <div class="stat" style="--n:4"><b id="s_songs">-</b><span>Songs uploaded</span></div>
+        <div class="stat" style="--n:5"><b id="s_plays">-</b><span>Listens today</span></div>
+        <div class="stat" style="--n:6"><b id="s_msgs">-</b><span>Chat messages today</span></div>
       </div>
       <div class="hint">Visitors per day (last 14 days, India time)</div>
       <div class="chart" id="chart"></div><div class="axis" id="axis"></div>
@@ -365,20 +387,32 @@ dialog{background:var(--lg-fill),rgba(18,20,22,.8)!important;-webkit-backdrop-fi
   }
 
   /* ---------- dashboard ---------- */
+  const countUp=(el,to)=>{
+    to=Number(to)||0;const from=Number(el.dataset.v||0);el.dataset.v=to;
+    if(reduceM||from===to){el.textContent=to.toLocaleString();return}
+    const t0=performance.now(),dur=900;
+    const step=now=>{const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=Math.round(from+(to-from)*e).toLocaleString();if(p<1)requestAnimationFrame(step)};
+    requestAnimationFrame(step)};
+  const reduceM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   async function refreshStats(){
     const {data,error}=await sb.rpc('admin_stats',{p_days:14});
     if(error||!data){say($('smsg'),'Stats are not set up yet. Run supabase/analytics.sql (and then update-v2.sql) in the Supabase SQL Editor.','err');return}
     say($('smsg'),'');
-    $('s_tv').textContent=data.today_visitors;$('s_tvis').textContent=data.today_visits;
-    $('s_total').textContent=data.total_visitors;$('s_songs').textContent=data.songs_total;
-    $('s_plays').textContent=data.plays_today;$('s_msgs').textContent=data.messages_today;
+    countUp($('s_tv'),data.today_visitors);countUp($('s_tvis'),data.today_visits);
+    countUp($('s_total'),data.total_visitors);countUp($('s_songs'),data.songs_total);
+    countUp($('s_plays'),data.plays_today);countUp($('s_msgs'),data.messages_today);
     const bt=data.songs_by_theme||{};
     $('s_theme').textContent=Object.keys(NAMES).map(k=>NAMES[k]+' '+(bt[k]||0)).join(' · ');
     const days=data.daily||[],max=Math.max(1,...days.map(x=>x.visitors));
     const ch=$('chart'),ax=$('axis');ch.textContent='';ax.textContent='';
-    days.forEach(x=>{const b=document.createElement('div');b.style.height=Math.max(2,x.visitors/max*100)+'%';b.title=x.day+': '+x.visitors+' visitors, '+x.visits+' visits';const i=document.createElement('i');i.textContent=x.visitors;b.append(i);ch.append(b);const a=document.createElement('span');a.textContent=x.day.slice(8);ax.append(a)});
+    days.forEach((x,n)=>{const b=document.createElement('div');b.style.setProperty('--n',n);b.style.height=Math.max(2,x.visitors/max*100)+'%';b.title=x.day+': '+x.visitors+' visitors, '+x.visits+' visits';const i=document.createElement('i');i.textContent=x.visitors;b.append(i);ch.append(b);const a=document.createElement('span');a.textContent=x.day.slice(8);ax.append(a)});
     const tp=$('s_top');tp.textContent='';
-    (data.top_songs||[]).forEach(x=>{const li=document.createElement('li');li.textContent=x.title+' ('+(NAMES[x.theme]||x.theme)+'): '+x.plays+' listens, '+(x.completes||0)+' full plays';tp.append(li)});
+    const ts=data.top_songs||[],tmax=Math.max(1,...ts.map(x=>x.plays+2*(x.completes||0)));
+    ts.forEach((x,n)=>{const li=document.createElement('li');li.style.setProperty('--n',n);
+      const t=document.createElement('b');t.textContent=x.title;
+      const sm=document.createElement('small');sm.textContent=(NAMES[x.theme]||x.theme)+': '+x.plays+' listens, '+(x.completes||0)+' full plays';
+      const bar=document.createElement('span');bar.className='tb';bar.style.setProperty('--w',Math.round((x.plays+2*(x.completes||0))/tmax*100)+'%');
+      li.append(t,sm,bar);tp.append(li)});
     if(!(data.top_songs||[]).length)tp.textContent='No songs yet.';
   }
   $('srefresh').onclick=refreshStats;
