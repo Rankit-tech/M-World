@@ -189,7 +189,21 @@ h1{padding:.14em .05em .2em;line-height:1.15}
 [data-theme=rap] h1,[data-theme=rap] h2{font-weight:400;letter-spacing:.03em}
 h1#title{font-family:'Yatra One',var(--display)!important;font-weight:400!important;font-synthesis:none;letter-spacing:0!important;-webkit-text-stroke:.09em var(--ink);paint-order:stroke fill}
 @media (min-width:900px){.hero .radio{zoom:.8}header{zoom:.88}}
-@media (max-width:720px){#floatPause{display:none!important}.hero{min-height:0;padding-bottom:1.2rem}.hero h1{margin-top:clamp(1.5rem,7svh,3.5rem);margin-bottom:clamp(1.5rem,6svh,3rem)}}
+@media (max-width:720px){
+header{flex-wrap:nowrap!important;gap:.3rem!important;padding:.45rem .55rem!important;align-items:center}
+header .left{flex-wrap:nowrap;gap:.3rem}
+header .brand{font-size:1rem}
+header .live{font-size:.66rem;padding:.2rem .45rem .2rem .4rem;gap:.3rem}
+header .live::before{width:.5rem;height:.5rem}
+header .links{order:0!important;width:auto!important;margin:0 0 0 auto!important;gap:0}
+header .links a,header .links button{font-size:.76rem;padding:.3rem .4rem}
+header .links a[href="#faq"]{display:none}
+header .menu{flex:none}
+header #menuBtn{font-size:.76rem;padding:.35rem .6rem}
+header #menuBtn .ch{display:none}
+h1#title{font-size:clamp(4.2rem,21vw,6.2rem)!important;line-height:1.1}
+}
+@media (max-width:720px){#floatPause{display:none!important}.hero{min-height:calc(100svh - 4rem);padding-bottom:1rem}.hero h1#title{margin-block:auto;font-size:clamp(3.8rem,19vw,5.5rem);line-height:1.1}}
 @media (min-width:900px){.hero .radio{max-width:500px;padding:.6rem .9rem;gap:.7rem;border-radius:1.6rem!important}.art{width:52px;height:52px;border-radius:14px;font-size:1.5rem}.ctl{gap:.35rem}.ctl button{width:32px;height:32px}.ctl .play{width:40px;height:40px}.ctl button svg{width:14px;height:14px}.ctl .play svg{width:20px;height:20px}.mid b{font-size:.95rem}.mid small{font-size:.75rem}.prog{margin-top:.35rem}}
 
 #dlg{background:radial-gradient(120% 80% at 50% 0%,#5a1630 0%,#2a0d1f 55%,#140712 100%)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:1.5px solid #f2c14e!important;box-shadow:0 0 0 4px rgba(242,193,78,.14),0 24px 60px rgba(0,0,0,.6),0 0 60px rgba(242,95,130,.25)!important;color:#fff4e0}
@@ -300,6 +314,20 @@ header #menuBtn{padding:.5rem 1rem}
   header .links{margin:0;order:3;width:100%;justify-content:center;display:flex}
   header .links a,header .links button{padding:.35rem .7rem}
 }
+/* phone: one slim row like the sketch: M. World, online, About, Support, Theme */
+@media(max-width:720px){
+  header{flex-wrap:nowrap;border-radius:999px;padding:.32rem .4rem .32rem .8rem;gap:.25rem}
+  header .left{gap:.35rem;flex:none}
+  header .brand{font-size:.88rem}
+  header .live{font-size:.62rem;padding:.2rem .5rem .2rem .4rem;gap:.3rem}
+  header .live::before{width:.5rem;height:.5rem}
+  header .links{order:0;width:auto;margin:0 auto;flex:none}
+  header .links a,header .links button{font-size:.72rem;padding:.3rem .38rem}
+  header .links a[href="#faq"]{display:none}
+  header #menuBtn{font-size:.72rem;padding:.32rem .55rem}
+  header #menuBtn .ch{display:none}
+}
+@media(max-width:380px){header{padding-left:.6rem}header .brand{font-size:.8rem}header .live{font-size:.56rem;padding:.18rem .4rem .18rem .32rem}header .links a,header .links button{font-size:.66rem;padding:.3rem .3rem}header #menuBtn{font-size:.66rem;padding:.3rem .45rem}}
 
 /* ===== Highway Dhaba: original animated night-road background ===== */
 .busfx{display:none;position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#140a1c 0%,#3a1630 38%,#a8412a 74%,#f2a04a 100%)}
@@ -371,7 +399,7 @@ header #menuBtn{padding:.5rem 1rem}
 <header>
   <div class="left"><div class="brand">M. World</div><div class="live" id="live">212 online</div></div>
   <div class="links"><a href="#aboutus">About</a><a href="#faq">FAQ</a><button id="supportTop">Support</button></div>
-  <div class="menu"><button id="menuBtn" aria-haspopup="true" aria-expanded="false">Change Theme</button><div class="drop" id="tabs" aria-label="Stations" hidden></div></div>
+  <div class="menu"><button id="menuBtn" aria-haspopup="true" aria-expanded="false"><span class="ch">Change </span>Theme</button><div class="drop" id="tabs" aria-label="Stations" hidden></div></div>
 </header>
 <section class="chat" id="chat" aria-label="Live chat" hidden>
   <h3><span>Live chat</span><small id="myid" title="Your fixed chat ID. It cannot be changed.">Your ID: …</small><button id="cclose" aria-label="Close chat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button></h3>
