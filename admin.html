@@ -10,7 +10,7 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>M. World admin</title>
 <style>
-:root{color-scheme:dark;--bg:#121416;--panel:#1b1e21;--ink:#f7ecd4;--mute:#b0b5ba;--accent:#e9ecef;--line:rgba(255,255,255,.18)}
+:root{color-scheme:dark;--bg:#121416;--panel:#1b1e21;--ink:#f7ecd4;--mute:#b0b5ba;--accent:#f2a03d;--accent2:#ffd08a;--line:rgba(255,255,255,.18)}
 *{box-sizing:border-box}
 body{margin:0;background:radial-gradient(60% 40% at 15% 0%,#2b3035,transparent 70%),var(--bg);color:var(--ink);font:400 1rem/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Arial,sans-serif;min-height:100vh}
 main{max-width:860px;margin:0 auto;padding:1rem 1rem 4rem}
@@ -182,6 +182,36 @@ dialog{background:var(--lg-fill),rgba(18,20,22,.8)!important;-webkit-backdrop-fi
 .top li .tb{position:absolute;left:0;bottom:0;height:3px;width:var(--w,0%);background:var(--accent);border-radius:0 3px 0 0;transform-origin:left;animation:fillX 1s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--n,0)*80ms + .5s)}
 .top li small{display:block;color:var(--mute)}
 @media(prefers-reduced-motion:reduce){[data-pane]:not([hidden]),.stat,.chart div,.top li,.top li .tb,.stat.live span::before{animation:none!important}}
+/* ===== Overview layout: header, milestone tracker, split panels (saffron on charcoal) ===== */
+.dhead{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:.9rem}
+.dhead h2{margin:.1rem 0 0;font-size:1.35rem;color:var(--ink)}
+.crumb{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}.crumb i{font-style:normal;opacity:.6;margin:0 .2rem}
+.onair{display:inline-flex;align-items:center;gap:.45rem;font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);background:color-mix(in srgb,var(--accent) 14%,transparent);padding:.3rem .7rem;border-radius:999px}
+.onair::before{content:"";width:.5rem;height:.5rem;border-radius:50%;background:var(--accent);animation:liveDot 1.8s ease-out infinite;--c:var(--accent)}
+.journey{list-style:none;margin:.3rem 0 .2rem;padding:0;display:grid;grid-template-columns:repeat(6,1fr);position:relative;counter-reset:j}
+.journey::before,.journey::after{content:"";position:absolute;left:calc(100%/12);height:3px;top:15px;border-radius:3px}
+.journey::before{right:calc(100%/12);background:rgba(255,255,255,.14)}
+.journey::after{width:calc((100% - 100%/6) * var(--p,0));background:linear-gradient(90deg,var(--accent),var(--accent2));transform-origin:left;animation:fillX 1.2s cubic-bezier(.2,.8,.2,1) .3s both;box-shadow:0 0 12px color-mix(in srgb,var(--accent) 60%,transparent)}
+.journey li{position:relative;z-index:1;display:grid;justify-items:center;gap:.4rem;text-align:center;font-size:.68rem;line-height:1.25;color:var(--mute);animation:statIn .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--n,0)*90ms + .2s)}
+.journey .dot{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--panel);border:2px solid rgba(255,255,255,.22);font-size:.8rem;font-weight:700;color:var(--mute)}
+.journey li.done .dot{background:var(--accent);border-color:var(--accent);color:#16181a}
+.journey li.next .dot{border-color:var(--accent);color:var(--accent2);box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 60%,transparent);animation:liveDot 1.8s ease-out infinite}
+.journey li.done,.journey li.next{color:var(--ink)}
+.jnote{margin:.6rem 0 1rem;font-size:.85rem;color:var(--mute)}
+.split{display:grid;grid-template-columns:1.4fr 1fr;gap:.8rem;margin:.9rem 0}
+@media(max-width:620px){.split{grid-template-columns:1fr}}
+.panel{border:1px solid var(--line);border-radius:1rem;padding:.9rem 1rem;background:rgba(255,255,255,.04);animation:statIn .6s cubic-bezier(.2,.8,.2,1) .4s both;min-width:0}
+.panel.hot{background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 20%,transparent),rgba(255,255,255,.03) 70%);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.ptitle{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:.6rem}
+.big{font-size:2.6rem;font-weight:800;line-height:1;color:var(--accent2);font-variant-numeric:tabular-nums}.bigl{font-size:.8rem;color:var(--mute);margin:.2rem 0 .7rem}
+.kv{margin:0;display:grid;gap:.35rem}.kv div{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:.35rem;font-size:.85rem}.kv dt{color:var(--mute)}.kv dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
+.stlist{list-style:none;margin:0;padding:0;display:grid;gap:.6rem}
+.stlist li{display:grid;grid-template-columns:1fr auto;gap:.2rem .6rem;font-size:.85rem;align-items:center}
+.stlist li b{font-weight:600}.stlist li em{font-style:normal;color:var(--mute);font-variant-numeric:tabular-nums}
+.stlist li span{grid-column:1/-1;height:6px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden}
+.stlist li span i{display:block;height:100%;width:var(--w,0%);background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px;transform-origin:left;animation:fillX 1s cubic-bezier(.2,.8,.2,1) .5s both}
+@media(max-width:420px){.journey li{font-size:.6rem}.big{font-size:2.2rem}}
+@media(prefers-reduced-motion:reduce){.journey::after,.journey li,.panel,.stlist li span i,.onair::before,.journey li.next .dot{animation:none!important}}
 </style>
 </head>
 <body>
@@ -217,7 +247,9 @@ dialog{background:var(--lg-fill),rgba(18,20,22,.8)!important;-webkit-backdrop-fi
 
     <!-- Dashboard -->
     <section class="card" data-pane="dash" role="tabpanel">
-      <h2>Dashboard</h2>
+      <div class="dhead"><div><div class="crumb">Admin <i>&rsaquo;</i> Dashboard</div><h2>Station overview</h2></div><span class="onair">On air</span></div>
+      <ol class="journey" id="journey" aria-label="Radio milestones"></ol>
+      <p class="jnote" id="jnote"></p>
       <div class="stats">
         <div class="stat live" style="--n:0"><b id="s_live">-</b><span>Live now</span></div>
         <div class="stat" style="--n:1"><b id="s_tv">-</b><span>Visitors today</span></div>
@@ -229,7 +261,12 @@ dialog{background:var(--lg-fill),rgba(18,20,22,.8)!important;-webkit-backdrop-fi
       </div>
       <div class="hint">Visitors per day (last 14 days, India time)</div>
       <div class="chart" id="chart"></div><div class="axis" id="axis"></div>
-      <div class="hint" style="margin-top:.8rem">Songs per theme: <span id="s_theme">-</span></div>
+      <span id="s_theme" hidden></span>
+      <div class="split">
+        <div class="panel"><div class="ptitle">Songs per station</div><ul class="stlist" id="s_stations"></ul></div>
+        <div class="panel hot"><div class="ptitle">Today</div><div class="big" id="s_big">-</div><div class="bigl">visitors</div>
+          <dl class="kv"><div><dt>Visits</dt><dd id="k_visits">-</dd></div><div><dt>Listens</dt><dd id="k_plays">-</dd></div><div><dt>Chat messages</dt><dd id="k_msgs">-</dd></div></dl></div>
+      </div>
       <div class="hint">Top songs (people who stayed and listened)</div>
       <ol class="top" id="s_top"></ol>
       <div class="msg" id="smsg"></div>
@@ -401,6 +438,17 @@ dialog{background:var(--lg-fill),rgba(18,20,22,.8)!important;-webkit-backdrop-fi
     countUp($('s_tv'),data.today_visitors);countUp($('s_tvis'),data.today_visits);
     countUp($('s_total'),data.total_visitors);countUp($('s_songs'),data.songs_total);
     countUp($('s_plays'),data.plays_today);countUp($('s_msgs'),data.messages_today);
+    const sv=Number(data.songs_total)||0,vv=Number(data.total_visitors)||0,pv=Number(data.plays_total)||0;
+    const MS=[['First song',sv>=1],['10 songs',sv>=10],['First visitor',vv>=1],['100 visitors',vv>=100],['First listen',pv>=1],['100 listens',pv>=100]];
+    const jn=$('journey');jn.textContent='';let nxt=MS.findIndex(m=>!m[1]);
+    MS.forEach((m,n)=>{const li=document.createElement('li');li.style.setProperty('--n',n);li.className=m[1]?'done':(n===nxt?'next':'');
+      const d=document.createElement('span');d.className='dot';d.textContent=m[1]?'\u2713':String(n+1);const t=document.createElement('span');t.textContent=m[0];li.append(d,t);jn.append(li)});
+    const doneN=MS.filter(m=>m[1]).length;jn.style.setProperty('--p',Math.max(0,doneN-1)/(MS.length-1));
+    $('jnote').textContent=nxt<0?'All milestones reached. The radio is running well.':'Next milestone: '+MS[nxt][0]+'. Songs: '+sv+', visitors: '+vv.toLocaleString()+', listens: '+pv.toLocaleString()+'.';
+    countUp($('s_big'),data.today_visitors);countUp($('k_visits'),data.today_visits);countUp($('k_plays'),data.plays_today);countUp($('k_msgs'),data.messages_today);
+    const bt0=data.songs_by_theme||{},bmax=Math.max(1,...Object.keys(NAMES).map(k=>bt0[k]||0)),sl=$('s_stations');sl.textContent='';
+    Object.keys(NAMES).forEach(k=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=NAMES[k];const e=document.createElement('em');e.textContent=bt0[k]||0;
+      const bar=document.createElement('span'),fi=document.createElement('i');fi.style.setProperty('--w',Math.round((bt0[k]||0)/bmax*100)+'%');bar.append(fi);li.append(b,e,bar);sl.append(li)});
     const bt=data.songs_by_theme||{};
     $('s_theme').textContent=Object.keys(NAMES).map(k=>NAMES[k]+' '+(bt[k]||0)).join(' · ');
     const days=data.daily||[],max=Math.max(1,...days.map(x=>x.visitors));
